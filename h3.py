@@ -163,7 +163,7 @@ def get_hero_info(process, num):
     data['战术等级'] = bytes2number(buf, 0xDC, 1),
     data['炮术等级'] = bytes2number(buf, 0xDD, 1),
     data['学习能力等级'] = bytes2number(buf, 0xDE, 1),
-    data['进攻术等级'] = bytes2number(buf, 0xD, 1),
+    data['进攻术等级'] = bytes2number(buf, 0xDF, 1),
     data['防御术等级'] = bytes2number(buf, 0xE0, 1),
     data['智力等级'] = bytes2number(buf, 0xE1, 1),
     data['魔力等级'] = bytes2number(buf, 0xE2, 1),
@@ -199,9 +199,18 @@ def get_hero_info(process, num):
     data['魔力位置'] = bytes2number(buf, 0xFE, 1),
     data['抵抗力位置'] = bytes2number(buf, 0xFF, 1),
     data['急救术位置'] = bytes2number(buf, 0x100, 1),
+    data['技能个数'] = bytes2number(buf, 0x101, 1),
 
     data['有魔法书'] = bytes2number(buf, 0x1B5, 4) == 0,    # 0x00000000: YES; 0xFFFFFFFF: NO
     data['士气幸运'] = bytes2number(buf, 0x107, 1),         # 0b11000000 0xC0 高士气，高幸运
+
+    # 物品栏
+    obj_index = 0
+    obj_num = 64
+    while obj_index < obj_num:
+        data['行囊%02d' % (obj_index+1)] = bytes2number(buf, 0x1d4 + (8 * obj_index), 4),
+        data['行囊%02d属性' % (obj_index+1)] = bytes2number(buf, 0x1d4 + (8 * obj_index) + 4, 4),
+        obj_index += 1
 
     # file_name = 'hero_%d' % (time.time())
     # print('file_name:', file_name)
@@ -271,8 +280,9 @@ def set_hero_info(process, num, offset, value, size):
     memory.write_process(process, addr, value, size)
 
 
-def learn_all_magic(process, hero_addr):
+def learn_all_magic(process, num):
     """学会所有魔法"""
+    hero_addr = GAME_ADDR['hero_1'] + (0x0492 * num)
     memory.write_process(process, hero_addr + 0x1B5, 0, 4)      # 魔法书
     memory.write_process(process, hero_addr + 0x430, b'\x01' * 70, 70)      # 70种魔法
 
@@ -287,7 +297,7 @@ def set_resources(process, player, data):
 
 
 def main():
-    pid = 252
+    pid = 1944
 
     process = memory.inject_process(pid)
     if not process:
@@ -302,13 +312,13 @@ def main():
     # for item in get_all_resouces(process):
     #     for resouece in item['data']:
     #         print(item['color'], resouece['name'], resouece['value'])
-    # data = get_hero_info(process, 0)
-    # for field in data:
-        # print(field, data[field])
+    data = get_hero_info(process, 0)
+    for field in data:
+        print(field, data[field])
     # time.sleep(1)
     # data = get_hero_info(process, 1)
 
-    # learn_all_magic(process, GAME_ADDR['hero_1'])
+    # learn_all_magic(process, 0)
     print(get_current_play(process))
 
     memory.close_process(process)

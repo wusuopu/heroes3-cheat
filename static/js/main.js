@@ -1,7 +1,150 @@
 'use strict';
 
-const PLAYER_COLORS = ['红', '蓝', '褐', '绿', '棕', '紫', '青', '粉'];
+const PLAYER_COLORS = ['红色', '蓝色', '褐色', '绿色', '棕色', '紫色', '青色', '粉色'];
 const RESOURCE_NAMES = ['木头', '水银', '石头', '硫磺', '水晶', '宝石', '黄金'];
+const ALL_OBJECTS = {
+  0x00: '魔法书',
+  0x01: '魔法卷轴',
+  0x02: '神器',
+  0x03: '投石车',
+  0x04: '弩车',
+  0x05: '补给车',
+  0x06: '急救帐篷',
+  0x07: '人马战斧',
+  0x08: '黑魔剑',
+  0x09: '狼人连枷',
+  0x0A: '恶魔之棒',
+  0x0B: '火神剑',
+  0x0C: '泰坦之剑',
+  0x0D: '矮人王盾',
+  0x0E: '亡灵盾',
+  0x0F: '狼人王盾',
+  0x10: '狂魔盾',
+  0x11: '邪盾',
+  0x12: '守护神之盾',
+  0x13: '神兽之冠',
+  0x14: '骷髅冠',
+  0x15: '混沌之冠',
+  0x16: '智慧之冠',
+  0x17: '地狱王冠',
+  0x18: '雷神之盔',
+  0x19: '藤木甲',
+  0x1A: '骨质胸甲',
+  0x1B: '大蛇神胸甲',
+  0x1C: '巨人战甲',
+  0x1D: '黄金甲',
+  0x1E: '泰坦战甲',
+  0x1F: '神奇战甲',
+  0x20: '圣靴',
+  0x21: '天使项链',
+  0x22: '狮王盾',
+  0x23: '先知剑',
+  0x24: '神谕之冠',
+  0x25: '龙眼戒',
+  0x26: '赤龙剑',
+  0x27: '龙盾',
+  0x28: '龙甲',
+  0x29: '龙骨胫甲',
+  0x2A: '龙翼袍',
+  0x2B: '龙牙项链',
+  0x2C: '龙牙冠',
+  0x2D: '龙眼指环',
+  0x2E: '幸运三叶草',
+  0x2F: '预言卡',
+  0x30: '幸运鸟',
+  0x31: '勇气勋章',
+  0x32: '勇士勋章',
+  0x33: '勇士令',
+  0x34: '窥镜',
+  0x35: '望远镜',
+  0x36: '亡灵护身符',
+  0x37: '吸血鬼披风',
+  0x38: '死神靴',
+  0x39: '抗魔链',
+  0x3A: '抗魔披风',
+  0x3B: '抗魔靴',
+  0x3C: '树精灵之弓',
+  0x3D: '神兽之鬃',
+  0x3E: '天羽箭',
+  0x3F: '神目鸟',
+  0x40: '火眼人',
+  0x41: '真理徽章',
+  0x42: '政治家勋章',
+  0x43: '礼仪之戒',
+  0x44: '大使勋带',
+  0x45: '旅行者之戒',
+  0x46: '骑士手套',
+  0x47: '海神项链',
+  0x48: '织天之翼',
+  0x49: '魔力护符',
+  0x4A: '魔法护符',
+  0x4B: '魔力球',
+  0x4C: '魔力项圈',
+  0x4D: '魔戒',
+  0x4E: '魔法披风',
+  0x4F: '气灵球',
+  0x50: '土灵球',
+  0x51: '火灵球',
+  0x52: '水灵球',
+  0x53: '禁魔披风',
+  0x54: '禁锢之灵',
+  0x55: '恶运沙漏',
+  0x56: '火系魔法书',
+  0x57: '气系魔法书',
+  0x58: '水系魔法书',
+  0x59: '土系魔法书',
+  0x5A: '水神靴',
+  0x5B: '黄金弓',
+  0x5C: '永恒之球',
+  0x5D: '毁灭之球',
+  0x5E: '活力之戒',
+  0x5F: '生命之戒',
+  0x60: '活力圣瓶',
+  0x61: '极速项链',
+  0x62: '神行靴',
+  0x63: '极速披风',
+  0x64: '冷静挂件',
+  0x65: '光明挂件',
+  0x66: '神圣挂件',
+  0x67: '生命挂件',
+  0x68: '死神挂件',
+  0x69: '自由挂件',
+  0x6A: '电神挂件',
+  0x6B: '清醒挂件',
+  0x6C: '勇气挂件',
+  0x6D: '水晶披风',
+  0x6E: '宝石戒指',
+  0x6F: '水银瓶',
+  0x70: '矿石车',
+  0x71: '硫磺指环',
+  0x72: '木材车',
+  0x73: '黄金囊',
+  0x74: '黄金袋',
+  0x75: '黄金包',
+  0x76: '天赐神足',
+  0x77: '天赐神胯',
+  0x78: '天赐神躯',
+  0x79: '天赐神臂',
+  0x7A: '天赐神首',
+  0x7B: '航海家之帽',
+  0x7C: '魔法师之帽',
+  0x7D: '战争枷锁',
+  0x7E: '禁魔球',
+  0x7F: '龙之血瓶',
+  0x80: '末日之刃',
+  0x81: '天使联盟',
+  0x82: '鬼王斗篷',
+  0x83: '神圣血瓶',
+  0x84: '诅咒铠甲',
+  0x85: '天赐神兵',
+  0x86: '龙王神力',
+  0x87: '泰坦之箭',
+  0x88: '海洋之帽',
+  0x89: '幻影神弓',
+  0x8A: '魔力源泉',
+  0x8B: '法师之戒',
+  0x8C: '丰收之角',
+}
 
 const BYTES_MAX = {
   2: 0xffff,
@@ -56,7 +199,7 @@ const HERO_OFFSET_MAP = {
   '战术等级': [0xDC, 1],
   '炮术等级': [0xDD, 1],
   '学习能力等级': [0xDE, 1],
-  '进攻术等级': [0xD, 1],
+  '进攻术等级': [0xDF, 1],
   '防御术等级': [0xE0, 1],
   '智力等级': [0xE1, 1],
   '魔力等级': [0xE2, 1],
@@ -91,10 +234,41 @@ const HERO_OFFSET_MAP = {
   '魔力位置': [0xFE, 1],
   '抵抗力位置': [0xFF, 1],
   '急救术位置': [0x100, 1],
+  '技能个数': [0x101, 1],
 
   '有魔法书': [0x1B5, 4],
-  '士气幸运': [0x107, 1],
+  '士气幸运': [0x107, 1],       // 0b11000000 0xC0 高士气，高幸运
 }
+_.times(64, (i) => {
+  HERO_OFFSET_MAP['行囊' + _.padStart(i+1, 2, '0')] = [0x1d4 + (8*i), 4]
+  HERO_OFFSET_MAP['行囊' + _.padStart(i+1, 2, '0') + '属性'] = [0x1d4 + (8*i) + 4, 4]
+})
+
+
+class Modal extends React.Component {
+  constructor(props) {
+    super(props)
+  }
+
+  render () {
+    if (!this.props.visible) {
+      return (<div></div>)
+    }
+
+    return (
+      <div className="modal">
+        <div className="modal-mask" onClick={() => {
+          this.props.onClose && this.props.onClose()
+        }}>
+        </div>
+        <div className="modal-body">
+          {this.props.children}
+        </div>
+      </div>
+    )
+  }
+}
+
 
 class Header extends React.Component {
   constructor(props) {
@@ -230,6 +404,8 @@ class HeroTab extends React.Component {
       heros: [],
       currentHero: undefined,
       heroInfo: {},
+      objModalVisible: false,
+      objIndex: undefined,
     }
   }
   render () {
@@ -272,12 +448,17 @@ class HeroTab extends React.Component {
     return (
       <div className="hero-info">
         {this.renderProperySection(info)}
+        {this.renderSkillSection(info)}
+        {this.renderObjectSection(info)}
+        {this.rendercreature(info)}
+
+        {this.renderObjectModal()}
       </div>
     )
   }
   renderProperySection (info) {
-    const fields = ['魔法值', '移动力', '经验', '攻击', '防御', '力量', '知识']
-    const eles = _.map(fields, (field, index) => {
+    const baseFields = ['魔法值', '移动力', '经验', '攻击', '防御', '力量', '知识']
+    const eles = _.map(baseFields, (field, index) => {
       return (
         <li className="info-item" key={index}>
           <label>{field}</label>
@@ -285,11 +466,168 @@ class HeroTab extends React.Component {
         </li>
       )
     })
+    const fields = _.concat(['士气幸运'], baseFields)
     return (
       <div className="info-section">
         <h2>基础属性 <button onClick={this.handleProperyModify(fields)}>修改</button></h2>
         <ul className="info-list">
           {eles}
+
+          <li className="info-item">
+            <label>最高士气幸运</label>
+            <input type="checkbox" checked={info['士气幸运'] === 0xC0} onChange={(ev) => {
+              let checked = ev.nativeEvent.target.checked
+              let value = checked ? 0xC0 : 0
+              this.handleProperyChange('士气幸运', value)
+            }} />
+          </li>
+        </ul>
+      </div>
+    )
+  }
+  renderSkillSection (info) {
+    const skillFields = [
+      '寻路术等级', '箭术等级', '后勤学等级', '侦察术等级', '外交术等级', '航海术等级', '领导术等级', '智慧术等级', '神秘术等级', '幸运术等级', '弹道术等级', '鹰眼术等级', '招魂术等级', '理财术等级', '火系魔法等级', '气系魔法等级', '水系魔法等级', '土系魔法等级', '学术等级', '战术等级', '炮术等级', '学习能力等级', '进攻术等级', '防御术等级', '智力等级', '魔力等级', '抵抗力等级', '急救术等级'
+    ]
+    const positionFields = ['寻路术位置', '箭术位置', '后勤学位置', '侦察术位置', '外交术位置', '航海术位置', '领导术位置', '智慧术位置', '神秘术位置', '幸运术位置', '弹道术位置', '鹰眼术位置', '招魂术位置', '理财术位置', '火系魔法位置', '气系魔法位置', '水系魔法位置', '土系魔法位置', '学术位置', '战术位置', '炮术位置', '学习能力位置', '进攻术位置', '防御术位置', '智力位置', '魔力位置', '抵抗力位置', '急救术位置']
+    const fields = _.concat([], positionFields, skillFields, ['技能个数'])
+    const levels = {0: '-', 1: '初级', 2: '中级', 3: '高级'}
+
+    const eles = _.map(skillFields, (field, index) => {
+      return (
+        <li className="info-item" key={index}>
+          <label>{field}</label>
+          <select value={info[field]} onChange={(ev) => {
+            let value = Number(ev.nativeEvent.target.value)
+            let values = [value]
+            let fields = [field]
+            if (value !== 0 && info[field] === 0) {
+              // 学习技能
+              fields.push(positionFields[index])
+              fields.push('技能个数')
+              values.push(index + 1)
+              values.push(info['技能个数'] + 1)
+            } else if (value === 0 && info[field] !== 0) {
+              // 移除技能
+              fields.push(positionFields[index])
+              fields.push('技能个数')
+              values.push(0)
+              values.push(info['技能个数'] - 1)
+            }
+            this.handleMultiProperyChange(fields, values)
+          }}>
+            <option value={0}>-</option>
+            <option value={1}>{levels[1]}</option>
+            <option value={2}>{levels[2]}</option>
+            <option value={3}>{levels[3]}</option>
+          </select>
+        </li>
+      )
+    })
+    return (
+      <div className="info-section">
+        <h2>
+          28项技能
+          <button onClick={this.handleLearnAllMagic}>学会所有魔法</button>
+          <button onClick={this.handleProperyModify(fields)}>修改</button>
+        </h2>
+
+        <div>
+          <button onClick={() => {
+            let values = _.concat(
+              _.map(positionFields, (f, i) => i+1),
+              _.map(skillFields, () => 3)
+            )
+            values.push(28)
+            this.handleMultiProperyChange(fields, values)
+          }}>全部学习</button>
+          <button onClick={() => {
+            this.handleMultiProperyChange(
+              fields, _.times(fields.length, () => 0)
+            )
+          }}>全部移除</button>
+        </div>
+
+        <ul className="info-list">
+          {eles}
+        </ul>
+      </div>
+    )
+  }
+  renderObjectSection (info) {
+    // 行囊背包
+    const fields = []
+    const eles = _.times(64, (i) => {
+      let field = '行囊' + _.padStart(i+1, 2, '0')
+      let properyField = '行囊' + _.padStart(i+1, 2, '0') + '属性'
+      fields.push(field, properyField)
+      let cleanBtn
+      if (ALL_OBJECTS[info[field]]) {
+        cleanBtn = (<button onClick={() => {
+          this.handleMultiProperyChange(
+            [field, properyField],
+            [0xffffffff, 0xffffffff]
+          )
+        }}>清空</button>)
+      }
+      return (
+        <li className="info-item col-8" key={i}>
+          <div className="object-item">
+            <label>{ALL_OBJECTS[info[field]]}</label>
+            {cleanBtn}
+            <button onClick={() => {
+              this.setState({objIndex: i, objModalVisible: true})
+            }}>修改</button>
+          </div>
+        </li>
+      )
+    })
+    return (
+      <div className="info-section">
+        <h2>行囊背包 <button onClick={this.handleProperyModify(fields)}>修改</button></h2>
+        <ul className="info-list">
+          {eles}
+        </ul>
+      </div>
+    )
+  }
+  renderObjectModal () {
+    const excludeObjs = [0x00, 0x01]    // 不显示的物品
+    const eles = []
+    _.each(ALL_OBJECTS, (name, code) => {
+      code = Number(code)
+      if (_.includes(excludeObjs, code)) { return }
+      eles.push(
+        <li key={code} onClick={() => {
+          let i = this.state.objIndex
+          if (!_.isUndefined(i)) {
+            let field = '行囊' + _.padStart(i+1, 2, '0')
+            let properyField = '行囊' + _.padStart(i+1, 2, '0') + '属性'
+            this.handleMultiProperyChange(
+              [field, properyField],
+              [code, 0xffffffff]
+            )
+          }
+          this.setState({objIndex: undefined, objModalVisible: false})
+        }} className="object-item col-8">{name}</li>
+      )
+    })
+    return (
+      <Modal visible={this.state.objModalVisible} onClose={() => {
+        this.setState({objIndex: undefined, objModalVisible: false})
+      }}>
+        <ul className="object-list">
+          {eles}
+        </ul>
+      </Modal>
+    )
+  }
+  rendercreature (info) {
+    // 兵种分配
+    return (
+      <div className="info-section">
+        <h2>兵种分配 <button>修改</button></h2>
+        <ul className="info-list">
         </ul>
       </div>
     )
@@ -333,11 +671,26 @@ class HeroTab extends React.Component {
   handleProperyInputChange = (field) => {
     return (ev) => {
       let value = Number(ev.nativeEvent.target.value)
+      this.handleProperyChange(field, value)
+    }
+  }
+  handleProperyChange = (field, value) => {
+    value = Number(value)
+    let max = BYTES_MAX[HERO_OFFSET_MAP[field][1]]
+    if (value > max) { value = max }
+    let heroInfo = _.assign({}, this.state.heroInfo, {[field]: value})
+    this.setState({heroInfo})
+  }
+  handleMultiProperyChange = (fields, values) => {
+    let data = {}
+    _.each(fields, (field, index) => {
+      let value = Number(values[index])
       let max = BYTES_MAX[HERO_OFFSET_MAP[field][1]]
       if (value > max) { value = max }
-      let heroInfo = _.assign({}, this.state.heroInfo, {[field]: value})
-      this.setState({heroInfo})
-    }
+      data[field] = value
+    })
+    let heroInfo = _.assign({}, this.state.heroInfo, data)
+    this.setState({heroInfo})
   }
   handleProperyModify = (fields) => {
     // 修改英雄属性
@@ -364,6 +717,22 @@ class HeroTab extends React.Component {
           this.setState({heroInfo: {}})
         })
       }
+    }
+  }
+  handleLearnAllMagic = () => {
+    let currentHero = this.state.currentHero
+    if (currentHero >= 0) {
+      axios.put(`/api/v1/heros/${currentHero}/magic`, {}).then((res) => {
+        let data = res.data
+        for (let key in data) {
+          if (_.isArray(data[key])) {
+            data[key] = data[key][0]
+          }
+        }
+        this.setState({heroInfo: data})
+      }).catch(() => {
+        this.setState({heroInfo: {}})
+      })
     }
   }
 }
@@ -435,7 +804,6 @@ class Main extends React.Component {
     )
   }
   handleTabClick = (tab) => {
-    console.log('handleTabClick', tab)
     this.setState({tab: tab})
   }
   health_check = () => {

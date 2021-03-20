@@ -2,7 +2,7 @@
 # encoding: utf-8
 
 import json
-import os
+import time
 import bottle
 import h3
 import memory
@@ -23,7 +23,8 @@ def render_json(data, status=200):
 
 @bottle.route('/')
 def index():
-    return bottle.template('index', **{'DEBUG': DEBUG})
+    roundKey = time.time() if DEBUG else ''
+    return bottle.template('index', **{'DEBUG': DEBUG, 'roundKey': roundKey})
 
 @bottle.route('/static/<path:path>')
 def callback(path):
@@ -100,16 +101,23 @@ def get_all_heros():
 
 
 @bottle.get('/api/v1/heros/:num')
-def get_all_heros(num):
+def get_hero(num):
     return render_json(h3.get_hero_info(PROCESS, int(num)))
 
 
 @bottle.put('/api/v1/heros/:num')
-def get_all_heros(num):
+def set_heros(num):
     num = int(num)
     data = bottle.request.json['data']
     for item in data:
         h3.set_hero_info(PROCESS, num, item['offset'], item['value'], item['size'])
+    return render_json(h3.get_hero_info(PROCESS, num))
+
+
+@bottle.put('/api/v1/heros/:num/magic')
+def learn_all_magic(num):
+    num = int(num)
+    h3.learn_all_magic(PROCESS, num)
     return render_json(h3.get_hero_info(PROCESS, num))
 
 

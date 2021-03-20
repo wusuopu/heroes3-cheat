@@ -44,3 +44,52 @@ ul.header .tab.active {
 .hero-info .info-list .info-item {
   width: 25%;
 }
+.col-8 {
+  width: 12% !important;
+}
+
+.object-list {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+}
+.object-item {
+  border: 1px solid;
+  width: 100%;
+  height: 70px;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+.object-item label {
+  width: 100%;
+  text-align: center;
+}
+
+.modal {
+  position: fixed;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  left: 0;
+  z-index: 1000;
+}
+.modal-mask {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: rgba(0,0,0,0.8);
+  z-index: -1;
+}
+.modal-body {
+  background: white;
+  max-width: 800px;
+  margin: auto;
+  max-height: 90%;
+  overflow-y: scroll;
+}
