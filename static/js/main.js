@@ -487,21 +487,24 @@ class ResourceTab extends React.Component {
     const resoueces = (this.state.resources[this.state.player] || {}).data || []
     const eles = _.map(RESOURCE_NAMES, (name, index) => {
       return (
-        <span className="resource-item" key={index}>
+        <div className="resource-item" key={index}>
           <label>{name}</label>
+          <img src={`/static/image/resources/${index}.gif`} className="icon" />
           <input
             value={resoueces[index]}
             onChange={(ev) => this.handleValueChange(ev.target.value, index)}
             type="number"
             max={0x7fffffff}
           />
-        </span>
+        </div>
       )
     })
     return (
       <div className="resource-list">
         {eles}
-        <button className="resource-item" onClick={this.handleModify}>修改资源</button>
+        <div className="resource-item">
+          <button onClick={this.handleModify}>修改资源</button>
+        </div>
       </div>
     )
   }
@@ -646,8 +649,8 @@ class HeroTab extends React.Component {
 
     const eles = _.map(skillFields, (field, index) => {
       return (
-        <li className="info-item" key={index}>
-          <label>{field}</label>
+        <li className="info-item col-7" key={index}>
+          <img src={`/static/image/skills/${index}.gif`} />
           <select value={info[field]} onChange={(ev) => {
             let value = Number(ev.nativeEvent.target.value)
             let values = [value]
