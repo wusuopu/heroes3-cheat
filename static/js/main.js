@@ -145,6 +145,153 @@ const ALL_OBJECTS = {
   0x8B: '法师之戒',
   0x8C: '丰收之角',
 }
+const ALL_CREATURES = {
+  0x00: '枪兵',
+  0x01: '戟兵',
+  0x02: '弓箭兵',
+  0x03: '神射手',
+  0x04: '狮鹫',
+  0x05: '皇家狮鹫',
+  0x06: '剑士',
+  0x07: '十字军',
+  0x08: '僧侣',
+  0x09: '祭司',
+  0x0A: '骑兵',
+  0x0B: '骑士',
+  0x0C: '天使',
+  0x0D: '大天使',
+  0x0E: '半人马',
+  0x0F: '半人马首领',
+  0x10: '矮人',
+  0x11: '战斗矮人',
+  0x12: '木精灵',
+  0x13: '大精灵',
+  0x14: '飞马',
+  0x15: '银飞马',
+  0x16: '枯木卫士',
+  0x17: '枯木战士',
+  0x18: '独角兽',
+  0x19: '独角神兽',
+  0x1A: '绿龙',
+  0x1B: '金龙',
+  0x1C: '小妖精',
+  0x1D: '大妖精',
+  0x1E: '石像鬼',
+  0x1F: '石像怪',
+  0x20: '石人',
+  0x21: '铁人',
+  0x22: '法师',
+  0x23: '大法师',
+  0x24: '神怪',
+  0x25: '神怪主',
+  0x26: '蛇女',
+  0x27: '蛇妖',
+  0x28: '巨人',
+  0x29: '泰坦巨人',
+  0x2A: '小怪物',
+  0x2B: '怪物',
+  0x2C: '歌革',
+  0x2D: '玛各',
+  0x2E: '地狱猎犬',
+  0x2F: '三首猎犬',
+  0x30: '恶鬼',
+  0x31: '长角恶鬼',
+  0x32: '邪神',
+  0x33: '邪神王',
+  0x34: '火精灵',
+  0x35: '烈火精灵',
+  0x36: '恶魔',
+  0x37: '大恶魔',
+  0x38: '骷髅兵',
+  0x39: '骷髅勇士',
+  0x3A: '行尸',
+  0x3B: '僵尸',
+  0x3C: '幽灵',
+  0x3D: '阴魂',
+  0x3E: '吸血鬼',
+  0x3F: '吸血鬼王',
+  0x40: '尸巫',
+  0x41: '尸巫王',
+  0x42: '暗黑骑士',
+  0x43: '恐怖骑士',
+  0x44: '骨龙',
+  0x45: '鬼龙',
+  0x46: '洞穴人',
+  0x47: '地狱洞穴人',
+  0x48: '鹰身女妖',
+  0x49: '鹰身女巫',
+  0x4A: '斜眼',
+  0x4B: '毒眼',
+  0x4C: '美杜莎',
+  0x4D: '美杜莎女王',
+  0x4E: '牛头怪',
+  0x4F: '牛头王',
+  0x50: '蝎狮',
+  0x51: '毒蝎狮',
+  0x52: '赤龙',
+  0x53: '黑龙',
+  0x54: '大耳怪',
+  0x55: '大耳怪王',
+  0x56: '恶狼骑士',
+  0x57: '恶狼斗士',
+  0x58: '半兽人',
+  0x59: '半兽人首领',
+  0x5A: '食人魔',
+  0x5B: '食人魔王',
+  0x5C: '大雕',
+  0x5D: '雷鸟',
+  0x5E: '独眼巨人',
+  0x5F: '独眼王',
+  0x60: '比蒙',
+  0x61: '比蒙巨兽',
+  0x62: '狼人',
+  0x63: '大狼人',
+  0x64: '蜥蜴人',
+  0x65: '蜥蜴勇士',
+  0x66: '毒蝇',
+  0x67: '龙蝇',
+  0x68: '蜥蜴',
+  0x69: '巨蜥',
+  0x6A: '野牛',
+  0x6B: '蛮牛',
+  0x6C: '飞龙',
+  0x6D: '飞龙王',
+  0x6E: '九头怪',
+  0x6F: '终极九头怪',
+  0x70: '气元素',
+  0x71: '土元素',
+  0x72: '火元素',
+  0x73: '水元素',
+  0x74: '金人',
+  0x75: '钻石人',
+  0x76: '小精灵',
+  0x77: '精灵',
+  0x78: '精神元素',
+  0x79: '魔法元素',
+  0x7A: '',
+  0x7B: '冰元素',
+  0x7C: '',
+  0x7D: '石元素',
+  0x7E: '',
+  0x7F: '雷元素',
+  0x80: '',
+  0x81: '烈火元素',
+  0x82: '火鸟',
+  0x83: '凤凰',
+  0x84: '圣龙',
+  0x85: '水晶龙',
+  0x86: '紫龙',
+  0x87: '毒龙',
+  0x88: '魔幻法师',
+  0x89: '幻影射手',
+  0x8A: '投石矮人',
+  0x8B: '农民',
+  0x8C: '野猪',
+  0x8D: '木乃伊',
+  0x8E: '游牧民',
+  0x8F: '盗贼',
+  0x90: '恶鬼',
+}
 
 const BYTES_MAX = {
   2: 0xffff,
@@ -269,7 +416,6 @@ class Modal extends React.Component {
   }
 }
 
-
 class Header extends React.Component {
   constructor(props) {
     super(props);
@@ -300,7 +446,7 @@ class PlayerSelect extends React.Component {
     return (
       <div className="player-select">
         选择需要修改的玩家：
-        <select disabled={this.props.disabled} onChange={this.handleSelect}>
+        <select disabled={this.props.disabled} value={this.props.value} onChange={this.handleSelect}>
           {options}
         </select>
         <button onClick={this.props.onRefresh}>刷新数据</button>
@@ -329,6 +475,7 @@ class ResourceTab extends React.Component {
         <PlayerSelect
           disabled={disabled}
           onSelect={(player) => this.setState({player: player})}
+          value={this.state.player}
           onRefresh={this.fetchData}
         />
 
@@ -406,6 +553,8 @@ class HeroTab extends React.Component {
       heroInfo: {},
       objModalVisible: false,
       objIndex: undefined,
+      creatureModalVisible: false,
+      creatureIndex: undefined,
     }
   }
   render () {
@@ -416,6 +565,7 @@ class HeroTab extends React.Component {
         <PlayerSelect
           disabled={disabled}
           onSelect={(player) => this.setState({player: player, currentHero: undefined})}
+          value={this.state.player}
           onRefresh={this.fetchData}
         />
 
@@ -453,6 +603,7 @@ class HeroTab extends React.Component {
         {this.rendercreature(info)}
 
         {this.renderObjectModal()}
+        {this.renderCreatureModal()}
       </div>
     )
   }
@@ -560,7 +711,8 @@ class HeroTab extends React.Component {
     const eles = _.times(64, (i) => {
       let field = '行囊' + _.padStart(i+1, 2, '0')
       let properyField = '行囊' + _.padStart(i+1, 2, '0') + '属性'
-      fields.push(field, properyField)
+      fields.push(field)
+      fields.push(properyField)
       let cleanBtn
       if (ALL_OBJECTS[info[field]]) {
         cleanBtn = (<button onClick={() => {
@@ -592,7 +744,7 @@ class HeroTab extends React.Component {
     )
   }
   renderObjectModal () {
-    const excludeObjs = [0x00, 0x01]    // 不显示的物品
+    const excludeObjs = [0x00, 0x01, 0x03]    // 不显示的物品
     const eles = []
     _.each(ALL_OBJECTS, (name, code) => {
       code = Number(code)
@@ -624,12 +776,61 @@ class HeroTab extends React.Component {
   }
   rendercreature (info) {
     // 兵种分配
+    const fields = []
+    const eles = _.times(7, (i) => {
+      let field = `第${i+1}格兵数量`
+      let typeField = `第${i+1}格兵兵种`
+      fields.push(field)
+      fields.push(typeField)
+      return (
+        <li className="info-item col-7" key={i}>
+          <div className="object-item">
+            <label onClick={() => {
+              this.setState({creatureIndex: i, creatureModalVisible: true})
+            }}>{ALL_CREATURES[info[typeField]]}</label>
+            <input
+              type="number"
+              max={BYTES_MAX[4]}
+              value={info[field]}
+              onChange={this.handleProperyInputChange(field)}
+            />
+          </div>
+        </li>
+      )
+    })
     return (
       <div className="info-section">
-        <h2>兵种分配 <button>修改</button></h2>
+        <h2>兵种分配 <button onClick={this.handleProperyModify(fields)}>修改</button></h2>
         <ul className="info-list">
+          {eles}
         </ul>
       </div>
+    )
+  }
+  renderCreatureModal () {
+    const eles = []
+    _.each(ALL_CREATURES, (name, code) => {
+      if (!name) { return }
+      code = Number(code)
+      eles.push(
+        <li key={code} onClick={() => {
+          let i = this.state.creatureIndex
+          if (!_.isUndefined(i)) {
+            let field = `第${i+1}格兵兵种`
+            this.handleProperyChange(field, code)
+          }
+          this.setState({creatureIndex: undefined, creatureModalVisible: false})
+        }} className="object-item col-8">{name}</li>
+      )
+    })
+    return (
+      <Modal visible={this.state.creatureModalVisible} onClose={() => {
+        this.setState({creatureIndex: undefined, creatureModalVisible: false})
+      }}>
+        <ul className="object-list">
+          {eles}
+        </ul>
+      </Modal>
     )
   }
   componentDidMount () {
@@ -781,7 +982,7 @@ class Main extends React.Component {
     }
     return (
       <div className="game_info">
-        {!this.state.game.pid ? <p className="error">游戏未运行</p> : ''}
+        {!this.state.game.pid ? <p className="error">Heroes3.exe 游戏未运行</p> : ''}
         <p>
           <span>当前玩家颜色：{PLAYER_COLORS[this.state.game.player]}</span>
           <span>当前游戏进程： {this.state.game.pid}</span>

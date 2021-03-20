@@ -5,6 +5,11 @@ main {
 .game_info span {
   margin-right: 50px;
 }
+.game_info .error {
+  font-size: 40px;
+  text-align: center;
+  color: red;
+}
 ul {
   list-style: none;
   padding: 0;
@@ -47,6 +52,9 @@ ul.header .tab.active {
 .col-8 {
   width: 12% !important;
 }
+.col-7 {
+  width: 14% !important;
+}
 
 .object-list {
   display: flex;
@@ -67,6 +75,7 @@ ul.header .tab.active {
 .object-item label {
   width: 100%;
   text-align: center;
+  cursor: pointer;
 }
 
 .modal {
