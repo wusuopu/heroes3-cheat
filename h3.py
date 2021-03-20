@@ -61,6 +61,13 @@ def bytes2number(buf, offset, size, unsigned=True):
     )
 
 
+def ints2bytes(numbers, size=4, unsigned=True):
+    ret = []
+    for i in numbers:
+        ret.append(memory.int_to_bytes(i, size, unsigned))
+    return b''.join(ret)
+
+
 def get_current_play(process):
     """获取当前玩家号"""
     pointer = memory.read_process(process, POINTER, 4)
@@ -73,12 +80,6 @@ def get_current_play(process):
             data['num'] = num
             return data
         num += 1
-
-
-def learn_all_magic(process, hero_addr):
-    """学会所有魔法"""
-    memory.write_process(process, hero_addr + 0x1B5, 0, 4)      # 魔法书
-    memory.write_process(process, hero_addr + 0x430, b'\x01' * 70, 70)      # 70种魔法
 
 
 def list_all_hero(process):
@@ -106,9 +107,11 @@ def list_all_hero(process):
     return data
 
 
-def get_hero_info(process, base_addr):
+def get_hero_info(process, num):
+    base_addr = GAME_ADDR['hero_1'] + (0x0492 * num)
     buf = memory.read_process(process, base_addr, 0x492)
     data = collections.OrderedDict()
+    data['num'] = num
     data['xAxis'] = bytes2number(buf, 0x00, 2),     # 坐标从左上角算起
     data['yAxis'] = bytes2number(buf, 0x02, 2),
     data['color'] = PLAYER_COLORS[buf[0x22]],
@@ -200,15 +203,15 @@ def get_hero_info(process, base_addr):
     data['有魔法书'] = bytes2number(buf, 0x1B5, 4) == 0,    # 0x00000000: YES; 0xFFFFFFFF: NO
     data['士气幸运'] = bytes2number(buf, 0x107, 1),         # 0b11000000 0xC0 高士气，高幸运
 
-    file_name = 'hero_%d' % (time.time())
-    print('file_name:', file_name)
-    with open(file_name, 'w') as fp:
-        i = 0
-        while i < 0x492:
-            fp.write("%02x " % (buf[i]))
-            i += 1
-            if (i % 16) == 0:
-                fp.write('\n')
+    # file_name = 'hero_%d' % (time.time())
+    # print('file_name:', file_name)
+    # with open(file_name, 'w') as fp:
+    #     i = 0
+    #     while i < 0x492:
+    #         fp.write("%02x " % (buf[i]))
+    #         i += 1
+    #         if (i % 16) == 0:
+    #             fp.write('\n')
     return data
 
 
@@ -228,10 +231,7 @@ def get_all_resouces(process):
         resource_count = len(RESOURCE_NAMES)
         while resource_num < resource_count:
             offset = resource_num * 0x04
-            data[i]['data'].append({
-                'name': RESOURCE_NAMES[resource_num],
-                'value': memory.bytes_to_int(value[0+offset:4+offset], 4),
-            })
+            data[i]['data'].append(memory.bytes_to_int(value[0+offset:4+offset], 4))
             resource_num += 1
         i += 1
     return data
@@ -265,6 +265,27 @@ def get_game_base_addr(pid):
     return data
 
 
+def set_hero_info(process, num, offset, value, size):
+    """修改英雄属性"""
+    addr = GAME_ADDR['hero_1'] + (0x0492 * num) + offset
+    memory.write_process(process, addr, value, size)
+
+
+def learn_all_magic(process, hero_addr):
+    """学会所有魔法"""
+    memory.write_process(process, hero_addr + 0x1B5, 0, 4)      # 魔法书
+    memory.write_process(process, hero_addr + 0x430, b'\x01' * 70, 70)      # 70种魔法
+
+
+def set_resources(process, player, data):
+    """修改玩家资源"""
+    addr = GAME_ADDR['play1_gold'] + (0x0168 * player) - (0x04 * 6)
+    data = data[0:7]
+    data = data + [0] * (7 - len(data))     # 7项资源数据
+    value = ints2bytes(data, 4, True)
+    memory.write_process(process, addr, value, 4*7)
+
+
 def main():
     pid = 252
 
@@ -281,11 +302,11 @@ def main():
     # for item in get_all_resouces(process):
     #     for resouece in item['data']:
     #         print(item['color'], resouece['name'], resouece['value'])
-    # data = get_hero_info(process, GAME_ADDR['hero_1'])
+    # data = get_hero_info(process, 0)
     # for field in data:
         # print(field, data[field])
     # time.sleep(1)
-    # data = get_hero_info(process, GAME_ADDR['hero_1'] + 0x0492)
+    # data = get_hero_info(process, 1)
 
     # learn_all_magic(process, GAME_ADDR['hero_1'])
     print(get_current_play(process))

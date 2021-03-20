@@ -1,0 +1,46 @@
+main {
+  max-width: 1200px;
+  margin: auto;
+}
+.game_info span {
+  margin-right: 50px;
+}
+ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+ul.header .tab {
+  display: inline-block;
+  width: 50%;
+  background-color: #cacaca;
+  text-align: center;
+  cursor: pointer;
+}
+ul.header .tab.active {
+  color: white;
+  background: black;
+}
+
+.player-select {
+  padding: 5px;
+}
+.player-select select {
+  width: 60px;
+}
+
+.resource-list {
+  display: flex;
+  flex-wrap: wrap;
+}
+.resource-item {
+  flex: 25%;
+}
+
+.hero-info .info-list {
+  display: flex;
+  flex-wrap: wrap;
+}
+.hero-info .info-list .info-item {
+  width: 25%;
+}

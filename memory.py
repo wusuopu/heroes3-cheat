@@ -69,6 +69,19 @@ def bytes_to_int(b, size=4, unsigned=True):
     return struct.unpack(f, b)[0]
 
 
+def int_to_bytes(i, size=4, unsigned=True):
+    """将整数转为字节"""
+    # char
+    f = '<B' if unsigned else 'b'
+    if size == 8:       # long long
+        f = '<Q' if unsigned else 'q'
+    if size == 4:       # int
+        f = '<I' if unsigned else 'i'
+    if size == 2:       # short
+        f = '<H' if unsigned else 'h'
+    return struct.pack(f, i)
+
+
 def get_process_info(pid):
     # https://docs.microsoft.com/en-us/windows/desktop/psapi/enumerating-all-modules-for-a-process
     hProcess = ctypes.windll.kernel32.OpenProcess(
@@ -296,8 +309,8 @@ def inject_process(pid):
 
 def main():
     # inject_process(2996)
-    print(get_system_info())
-    list_process()
+    # print(get_system_info())
+    print(list_process())
 
 if __name__ == '__main__':
     main()
