@@ -995,13 +995,13 @@ class Main extends React.Component {
   renderResource () {
     if (!this.state.game.pid || this.state.tab !== 'resource') { return }
     return (
-      <ResourceTab game={this.state.game} />
+      <ResourceTab key={this.state.game.player} game={this.state.game} />
     )
   }
   renderHero () {
     if (!this.state.game.pid || this.state.tab !== 'hero') { return }
     return (
-      <HeroTab game={this.state.game} />
+      <HeroTab key={this.state.game.player} game={this.state.game} />
     )
   }
   handleTabClick = (tab) => {
