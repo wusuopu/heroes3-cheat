@@ -1,6 +1,6 @@
 main {
-  max-width: 1200px;
-  margin: auto;
+  max-width: 900px;
+  margin: 10px auto 50px;
 }
 .game_info span {
   margin-right: 50px;
@@ -8,6 +8,9 @@ main {
 .game_info .error {
   font-size: 40px;
   text-align: center;
+  color: red;
+}
+button.confirm {
   color: red;
 }
 ul {
@@ -29,9 +32,18 @@ ul.header .tab.active {
 
 .player-select {
   padding: 5px;
+  display: flex;
+  align-items: center;
 }
-.player-select select {
-  width: 60px;
+.player-list {
+  display: flex;
+}
+.player-item {
+  cursor: pointer;
+  border: 1px solid white;
+}
+.player-item.active {
+  border-color: #e40b6b;
 }
 
 .resource-list {
@@ -44,6 +56,29 @@ ul.header .tab.active {
   flex-direction: column;
   align-items: center;
   justify-content: center;
+}
+
+.row {
+  display: flex;
+  flex-direction: row;
+}
+.hero-select {
+
+}
+.hero-list {
+  display: flex;
+  flex-wrap: wrap;
+  border: 1px solid #999999;
+}
+.hero-avator {
+  display: inline-block;
+  cursor: pointer;
+  text-align: center;
+  border: 1px solid white;
+  padding: 0 2px;
+}
+.hero-avator.active {
+  border-color: #e40b6b;
 }
 
 .hero-info .info-list {
@@ -83,6 +118,25 @@ ul.header .tab.active {
   text-align: center;
   cursor: pointer;
 }
+.creature-item {
+  border: 1px solid;
+  width: 100%;
+  cursor: pointer;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+}
+.creature-item label {
+  width: 100%;
+  height: 22px;
+  text-align: center;
+  cursor: pointer;
+}
+.creature-item input {
+  width: 80%;
+}
 
 .modal {
   position: fixed;
@@ -118,4 +172,9 @@ ul.header .tab.active {
   height: 60px;
   background-size: contain;
   background-repeat: no-repeat;
+  background-position: center;
+}
+.icon-players {
+  width: 36px;
+  height: 43px;
 }

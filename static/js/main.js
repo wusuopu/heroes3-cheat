@@ -441,20 +441,46 @@ class PlayerSelect extends React.Component {
   }
   render () {
     let options = _.map(PLAYER_COLORS, (item, index) => {
-      return (<option value={index} key={index}>{item}</option>)
+      return (
+        <li key={index} className={`player-item ${this.props.value === index ? 'active' : ''}`} onClick={() => this.handleSelect(index)}>
+          <i className={`icon icon-players icon-players-${index}`}></i>
+        </li>
+      )
     })
     return (
       <div className="player-select">
         选择需要修改的玩家：
-        <select disabled={this.props.disabled} value={this.props.value} onChange={this.handleSelect}>
+        <ul className="player-list">
           {options}
-        </select>
+        </ul>
         <button onClick={this.props.onRefresh}>刷新数据</button>
       </div>
     )
   }
-  handleSelect = (ev) => {
-    this.props.onSelect && this.props.onSelect(Number(ev.nativeEvent.target.value))
+  handleSelect = (value) => {
+    this.props.onSelect && this.props.onSelect(Number(value))
+  }
+}
+class HeroAvator extends React.Component {
+  constructor(props) {
+    super(props)
+  }
+  render () {
+    let avator = _.get(this.props.hero, 'avator')
+    let name = _.get(this.props.hero, 'name', '')
+    return (
+      <div className={`hero-avator ${this.props.active ? 'active' : ''}`} onClick={this.handleClick}>
+        <div>
+          <i className={`icon icon-heros-${avator}`}></i>
+        </div>
+        <div>{name}</div>
+      </div>
+    )
+  }
+  handleClick = () => {
+    let num = this.props.hero.num
+    if (_.isUndefined(num)) { return }
+    this.props.onClick && this.props.onClick(num)
   }
 }
 
@@ -494,6 +520,7 @@ class ResourceTab extends React.Component {
             value={resoueces[index]}
             onChange={(ev) => this.handleValueChange(ev.target.value, index)}
             type="number"
+            min={0}
             max={0x7fffffff}
           />
         </div>
@@ -580,16 +607,30 @@ class HeroTab extends React.Component {
   }
   renderHeroSelect () {
     const heros = _.filter(this.state.heros, {player: this.state.player})
-    const options = _.concat([<option key={-1} value={undefined}>-</option>], _.map(heros, (h) => {
-      return (<option key={h.num} value={h.num}>{h.name}</option>)
-    }))
-    return (
-      <div className="hero-list">
-        选择需要修改的英雄：
-        <select disabled={_.isEmpty(heros)} onChange={this.handleHeroSelect}>
+    const options = _.map(heros, (h) => {
+      return (
+        <HeroAvator
+          active={h.num === this.state.currentHero}
+          key={h.num}
+          hero={h}
+          onClick={this.handleHeroSelect}
+        />
+      )
+    })
+    let disabled = _.isEmpty(heros)
+    let choose
+    if (!disabled) {
+      choose = (
+        <div className="hero-list">
           {options}
-        </select>
-        <button onClick={this.handleRefreshHero}>刷新英雄数据</button>
+        </div>
+      )
+    }
+    return (
+      <div className={`hero-select ${disabled ? 'disabled' : ''}`}>
+        选择需要修改的英雄：
+        <button disabled={disabled} onClick={this.handleRefreshHero}>刷新当前英雄数据</button>
+        {choose}
       </div>
     )
   }
@@ -616,14 +657,14 @@ class HeroTab extends React.Component {
       return (
         <li className="info-item" key={index}>
           <label>{field}</label>
-          <input type="number" max={BYTES_MAX[4]} value={info[field]} onChange={this.handleProperyInputChange(field)} />
+          <input type="number" min={0} max={BYTES_MAX[4]} value={info[field]} onChange={this.handleProperyInputChange(field)} />
         </li>
       )
     })
     const fields = _.concat(['士气幸运'], baseFields)
     return (
       <div className="info-section">
-        <h2>基础属性 <button onClick={this.handleProperyModify(fields)}>确认修改</button></h2>
+        <h2>基础属性 <button className="confirm" onClick={this.handleProperyModify(fields)}>确认修改</button></h2>
         <ul className="info-list">
           {eles}
 
@@ -679,11 +720,11 @@ class HeroTab extends React.Component {
       )
     })
     return (
-      <div className="info-section">
+      <div className="skill-section">
         <h2>
           28项技能
-          <button onClick={this.handleLearnAllMagic}>学会所有魔法</button>
-          <button onClick={this.handleProperyModify(fields)}>确认修改</button>
+          <button className="confirm" onClick={this.handleLearnAllMagic}>学会所有魔法</button>
+          <button className="confirm" onClick={this.handleProperyModify(fields)}>确认修改</button>
         </h2>
 
         <div>
@@ -741,8 +782,8 @@ class HeroTab extends React.Component {
       )
     })
     return (
-      <div className="info-section">
-        <h2>行囊背包 <button onClick={this.handleProperyModify(fields)}>确认修改</button></h2>
+      <div className="object-section">
+        <h2>行囊背包 <button className="confirm" onClick={this.handleProperyModify(fields)}>确认修改</button></h2>
         <ul className="info-list">
           {eles}
         </ul>
@@ -791,24 +832,35 @@ class HeroTab extends React.Component {
       let typeField = `第${i+1}格兵兵种`
       fields.push(field)
       fields.push(typeField)
+
+      let num = info[field]
+      let type = info[typeField]
+      let disabled = num === 0 || type === 0xffffffff
       return (
         <li className="info-item col-7" key={i}>
-          <div className="object-item">
+          <div className="creature-item">
             <label onClick={() => { this.setState({creatureIndex: i, creatureModalVisible: true}) }}>{ALL_CREATURES[info[typeField]]}</label>
-            <i className={`icon icon-creatures-${info[typeField]}`} onClick={() => { this.setState({creatureIndex: i, creatureModalVisible: true}) }}></i>
+            <i className={`icon icon-creatures-${type}`} onClick={() => { this.setState({creatureIndex: i, creatureModalVisible: true}) }}></i>
             <input
               type="number"
+              min={0}
               max={BYTES_MAX[4]}
-              value={info[field]}
+              value={num}
               onChange={this.handleProperyInputChange(field)}
             />
+            <button disabled={disabled} onClick={() => this.handleDivideCreature(i)}>一键分兵</button>
+            <button disabled={disabled} onClick={() => this.handleAVGDivideCreature(i)}>平均分兵</button>
           </div>
         </li>
       )
     })
     return (
-      <div className="info-section">
-        <h2>兵种分配 <button onClick={this.handleProperyModify(fields)}>确认修改</button></h2>
+      <div className="creature-section">
+        <h2>
+          兵种分配
+          <button onClick={this.handleMergeCreature}>合并相同兵种</button>
+          <button className="confirm" onClick={this.handleProperyModify(fields)}>确认修改</button>
+        </h2>
         <ul className="info-list">
           {eles}
         </ul>
@@ -855,8 +907,8 @@ class HeroTab extends React.Component {
       this.setState({heros: []})
     })
   }
-  handleHeroSelect = (ev) => {
-    let currentHero = Number(ev.nativeEvent.target.value)
+  handleHeroSelect = (num) => {
+    let currentHero = Number(num)
     this.setState({currentHero: currentHero})
     this.handleRefreshHero(currentHero)
   }
@@ -946,6 +998,127 @@ class HeroTab extends React.Component {
         this.setState({heroInfo: {}})
       })
     }
+  }
+
+  filterAllEmptyCreaturePostion = (index) => {
+    // 过滤所有兵种为空的栏位
+    const info = this.state.heroInfo
+    let positions = []
+    _.times(7, (i) => {
+      if (index === i) { return }
+      let field = `第${i+1}格兵数量`
+      let typeField = `第${i+1}格兵兵种`
+      let num = info[field]
+      let type = info[typeField]
+      if (num === 0 || type === 0xffffffff) { positions.push(i) }
+    })
+    return positions
+  }
+  handleDivideCreature = (index) => {
+    // 一键分兵：每个空格分1个兵
+    const info = this.state.heroInfo
+
+    let field = `第${index+1}格兵数量`
+    let typeField = `第${index+1}格兵兵种`
+    let num = info[field]
+    let type = info[typeField]
+
+    if (num <= 1 || type === 0xffffffff) { return }
+
+    const fields = []
+    const values = []
+    let positions = this.filterAllEmptyCreaturePostion(index)
+    if (_.isEmpty(positions)) { return }
+
+    _.each(positions, (i) => {
+      let f = `第${i+1}格兵数量`
+      let t = `第${i+1}格兵兵种`
+      if (num <= 1) { return }   // 兵数不足，不再分配
+
+      fields.push(f)
+      fields.push(t)
+      values.push(1)      // 修改当前栏位兵数
+      values.push(type)   // 修改当前栏位兵种
+      num--
+    })
+    fields.push(field)
+    values.push(num)
+    this.handleMultiProperyChange(fields, values)
+  }
+  handleAVGDivideCreature = (index) => {
+    // 平均分兵：为所有空格平均分配兵种
+    const info = this.state.heroInfo
+
+    let field = `第${index+1}格兵数量`
+    let typeField = `第${index+1}格兵兵种`
+    let num = info[field]
+    let type = info[typeField]
+
+    if (num <= 1 || type === 0xffffffff) { return }
+
+    const fields = []
+    const values = []
+    let positions = this.filterAllEmptyCreaturePostion(index)
+    if (_.isEmpty(positions)) { return }
+
+    let unit = Math.floor(num / (positions.length + 1))   // 每个空格分配的数量
+    if (unit < 1) { unit = 1 }      // 每格至少分配1个单位
+    _.each(positions, (i) => {
+      let f = `第${i+1}格兵数量`
+      let t = `第${i+1}格兵兵种`
+      if (num <= unit) { return }   // 兵数不足，不再分配
+
+      fields.push(f)
+      fields.push(t)
+      values.push(unit)   // 修改当前栏位兵数
+      values.push(type)   // 修改当前栏位兵种
+      num = num - unit
+    })
+
+    fields.push(field)
+    values.push(num)
+    this.handleMultiProperyChange(fields, values)
+  }
+
+  filterAllCreatureType = () => {
+    // 计算各个兵种的数量
+    const info = this.state.heroInfo
+    const data = {}
+    _.times(7, i => {
+      let field = `第${i+1}格兵数量`
+      let typeField = `第${i+1}格兵兵种`
+      let num = info[field]
+      let type = info[typeField]
+      if (num === 0 || type === 0xffffffff) { return }    // 当前栏位为空
+      if (!data[type]) { data[type] = 0 }
+      data[type] += num
+    })
+    return data
+  }
+  handleMergeCreature = () => {
+    // 将所有相同的兵种合并
+    const data = this.filterAllCreatureType()
+    let size = _.size(data)
+    if (size === 7) { return }    // 没有相同的兵种
+
+    const fields = []
+    const values = []
+    const allTypes = _.keys(data)   // 所有生物种类
+    _.times(7, (i) => {
+      let f = `第${i+1}格兵数量`
+      let t = `第${i+1}格兵兵种`
+      fields.push(f)
+      fields.push(t)
+
+      if (i >= size) {            // 清空该栏位
+        values.push(0)
+        values.push(0xffffffff)
+      } else {
+        values.push(data[allTypes[i]])
+        values.push(allTypes[i])
+      }
+    })
+    this.handleMultiProperyChange(fields, values)
   }
 }
 

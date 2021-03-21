@@ -101,6 +101,7 @@ def list_all_hero(process):
                 'addr': addr - 0x22,
                 'player': value[0],
                 'name': name,
+                'avator': value[1+13+4],
             })
         i += 1
 
@@ -116,7 +117,10 @@ def get_hero_info(process, num):
     data['yAxis'] = bytes2number(buf, 0x02, 2),
     data['color'] = PLAYER_COLORS[buf[0x22]],
     data['name'] = bytes2str(buf[0x23:(0x23+30)]),
+    data['type'] = bytes2number(buf, 0x30, 1),      # 英雄类型 name + 13
+    data['头像'] = bytes2number(buf, 0x34, 1),      # 英雄头像 type + 4
     data['魔法值'] = bytes2number(buf, 0x18, 2),
+    data['特长'] = bytes2number(buf, 0x1A, 2),      # 英雄特长
     data['移动力'] = bytes2number(buf, 0x4d, 2),
     data['经验'] = bytes2number(buf, 0x51, 4),
     data['等级'] = bytes2number(buf, 0x55, 2),
