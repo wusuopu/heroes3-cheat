@@ -489,7 +489,7 @@ class ResourceTab extends React.Component {
       return (
         <div className="resource-item" key={index}>
           <label>{name}</label>
-          <img src={`/static/image/resources/${index}.gif`} className="icon" />
+          <i className={`icon-resources icon-resources-${index}`}></i>
           <input
             value={resoueces[index]}
             onChange={(ev) => this.handleValueChange(ev.target.value, index)}
@@ -603,7 +603,7 @@ class HeroTab extends React.Component {
         {this.renderProperySection(info)}
         {this.renderSkillSection(info)}
         {this.renderObjectSection(info)}
-        {this.rendercreature(info)}
+        {this.renderCreatureSection(info)}
 
         {this.renderObjectModal()}
         {this.renderCreatureModal()}
@@ -623,7 +623,7 @@ class HeroTab extends React.Component {
     const fields = _.concat(['士气幸运'], baseFields)
     return (
       <div className="info-section">
-        <h2>基础属性 <button onClick={this.handleProperyModify(fields)}>修改</button></h2>
+        <h2>基础属性 <button onClick={this.handleProperyModify(fields)}>确认修改</button></h2>
         <ul className="info-list">
           {eles}
 
@@ -650,7 +650,7 @@ class HeroTab extends React.Component {
     const eles = _.map(skillFields, (field, index) => {
       return (
         <li className="info-item col-7" key={index}>
-          <img src={`/static/image/skills/${index}.gif`} />
+          <i className={`icon-skills icon-skills-${index}`}></i>
           <select value={info[field]} onChange={(ev) => {
             let value = Number(ev.nativeEvent.target.value)
             let values = [value]
@@ -683,7 +683,7 @@ class HeroTab extends React.Component {
         <h2>
           28项技能
           <button onClick={this.handleLearnAllMagic}>学会所有魔法</button>
-          <button onClick={this.handleProperyModify(fields)}>修改</button>
+          <button onClick={this.handleProperyModify(fields)}>确认修改</button>
         </h2>
 
         <div>
@@ -729,17 +729,20 @@ class HeroTab extends React.Component {
         <li className="info-item col-8" key={i}>
           <div className="object-item">
             <label>{ALL_OBJECTS[info[field]]}</label>
-            {cleanBtn}
-            <button onClick={() => {
-              this.setState({objIndex: i, objModalVisible: true})
-            }}>修改</button>
+            <i className={`icon icon-objects-${info[field]}`}></i>
+            <div>
+              {cleanBtn}
+              <button onClick={() => {
+                this.setState({objIndex: i, objModalVisible: true})
+              }}>修改</button>
+            </div>
           </div>
         </li>
       )
     })
     return (
       <div className="info-section">
-        <h2>行囊背包 <button onClick={this.handleProperyModify(fields)}>修改</button></h2>
+        <h2>行囊背包 <button onClick={this.handleProperyModify(fields)}>确认修改</button></h2>
         <ul className="info-list">
           {eles}
         </ul>
@@ -764,7 +767,10 @@ class HeroTab extends React.Component {
             )
           }
           this.setState({objIndex: undefined, objModalVisible: false})
-        }} className="object-item col-8">{name}</li>
+        }} className="object-item col-8">
+          {name}
+          <i className={`icon icon-objects-${code}`}></i>
+        </li>
       )
     })
     return (
@@ -777,7 +783,7 @@ class HeroTab extends React.Component {
       </Modal>
     )
   }
-  rendercreature (info) {
+  renderCreatureSection (info) {
     // 兵种分配
     const fields = []
     const eles = _.times(7, (i) => {
@@ -788,9 +794,8 @@ class HeroTab extends React.Component {
       return (
         <li className="info-item col-7" key={i}>
           <div className="object-item">
-            <label onClick={() => {
-              this.setState({creatureIndex: i, creatureModalVisible: true})
-            }}>{ALL_CREATURES[info[typeField]]}</label>
+            <label onClick={() => { this.setState({creatureIndex: i, creatureModalVisible: true}) }}>{ALL_CREATURES[info[typeField]]}</label>
+            <i className={`icon icon-creatures-${info[typeField]}`} onClick={() => { this.setState({creatureIndex: i, creatureModalVisible: true}) }}></i>
             <input
               type="number"
               max={BYTES_MAX[4]}
@@ -803,7 +808,7 @@ class HeroTab extends React.Component {
     })
     return (
       <div className="info-section">
-        <h2>兵种分配 <button onClick={this.handleProperyModify(fields)}>修改</button></h2>
+        <h2>兵种分配 <button onClick={this.handleProperyModify(fields)}>确认修改</button></h2>
         <ul className="info-list">
           {eles}
         </ul>
@@ -823,7 +828,10 @@ class HeroTab extends React.Component {
             this.handleProperyChange(field, code)
           }
           this.setState({creatureIndex: undefined, creatureModalVisible: false})
-        }} className="object-item col-8">{name}</li>
+        }} className="object-item col-8">
+          {name}
+          <i className={`icon icon-creatures-${code}`}></i>
+        </li>
       )
     })
     return (
@@ -987,7 +995,7 @@ class Main extends React.Component {
       <div className="game_info">
         {!this.state.game.pid ? <p className="error">Heroes3.exe 游戏未运行</p> : ''}
         <p>
-          <span>当前玩家颜色：{PLAYER_COLORS[this.state.game.player]}</span>
+          <span>当前玩家色：{PLAYER_COLORS[this.state.game.player]}</span>
           <span>当前游戏进程： {this.state.game.pid}</span>
           <span>当前游戏版本： {version}</span>
           <button onClick={() => window.location.reload()}>刷新页面</button>
