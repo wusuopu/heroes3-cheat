@@ -449,6 +449,49 @@ class Header extends React.Component {
   }
 }
 
+
+class Fixed extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      fixed: false,
+      height: 'initial',
+    }
+    this.sticky = 0
+  }
+  render () {
+    return (
+      <div className="fixed-container" style={{height: this.state.height}} ref="container">
+        <div className={`fixed ${this.state.fixed ? 'active' : ''}`} ref="fixed">
+          {this.props.children}
+        </div>
+      </div>
+    )
+  }
+  componentDidMount () {
+    this.sticky = this.refs.fixed.offsetTop
+    window.addEventListener('scroll', this.handleScroll, false)
+  }
+  componentWillUnmount () {
+    window.removeEventListener('scroll', this.handleScroll, false)
+  }
+  handleScroll = () => {
+    let newState = {}
+    if (window.pageYOffset > this.sticky) {
+      if (!this.state.fixed) { newState.fixed = true }
+      if (this.state.height !== this.refs.fixed.offsetHeight) {
+        newState.height = this.refs.fixed.offsetHeight
+      }
+    } else {
+      if (this.state.fixed) {
+        newState.fixed = false
+        newState.height = 'initial'
+      }
+    }
+    if (!_.isEmpty(newState)) { this.setState(newState) }
+  }
+}
+
 class PlayerSelect extends React.Component {
   constructor(props) {
     super(props)
@@ -606,14 +649,16 @@ class HeroTab extends React.Component {
 
     return (
       <div className="tab-item">
-        <PlayerSelect
-          disabled={disabled}
-          onSelect={(player) => this.setState({player: player, currentHero: undefined})}
-          value={this.state.player}
-          onRefresh={this.fetchData}
-        />
+        <Fixed>
+          <PlayerSelect
+            disabled={disabled}
+            onSelect={(player) => this.setState({player: player, currentHero: undefined})}
+            value={this.state.player}
+            onRefresh={this.fetchData}
+          />
 
-        {this.renderHeroSelect()}
+          {this.renderHeroSelect()}
+        </Fixed>
 
         {this.renderForm()}
       </div>

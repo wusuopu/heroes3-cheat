@@ -1495,7 +1495,7 @@ ul {
 }
 ul.header .tab {
   display: inline-block;
-  width: 50%;
+  width: 33.3%;
   background-color: #cacaca;
   text-align: center;
   cursor: pointer;
@@ -1503,6 +1503,18 @@ ul.header .tab {
 ul.header .tab.active {
   color: white;
   background: black;
+}
+
+.fixed-container {
+}
+.fixed-container .fixed.active {
+  position: fixed;
+  top: 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  width: 100%;
+  max-width: 900px;
+  z-index: 100;
 }
 
 .player-select {
@@ -1556,11 +1568,11 @@ ul.header .tab.active {
   border-color: #e40b6b;
 }
 
-.hero-info .info-list {
+.info-list {
   display: flex;
   flex-wrap: wrap;
 }
-.hero-info .info-list .info-item {
+.info-list .info-item {
   width: 25%;
   display: flex;
 }
@@ -1636,6 +1648,24 @@ ul.header .tab.active {
   margin: auto;
   max-height: 90%;
   overflow-y: scroll;
+}
+
+.town-select {
+}
+.town-list {
+  display: flex;
+  flex-wrap: wrap;
+  border: 1px solid #999999;
+}
+.town-avator {
+  display: inline-block;
+  cursor: pointer;
+  text-align: center;
+  border: 1px solid white;
+  padding: 0 2px;
+}
+.town-avator.active {
+  border-color: #e40b6b;
 }
 
 /* ================== */

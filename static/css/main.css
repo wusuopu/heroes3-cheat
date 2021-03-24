@@ -30,6 +30,18 @@ ul.header .tab.active {
   background: black;
 }
 
+.fixed-container {
+}
+.fixed-container .fixed.active {
+  position: fixed;
+  top: 0;
+  background: white;
+  border: 1px solid #e0e0e0;
+  width: 100%;
+  max-width: 900px;
+  z-index: 100;
+}
+
 .player-select {
   padding: 5px;
   display: flex;
