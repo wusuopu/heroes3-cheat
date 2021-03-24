@@ -3,6 +3,7 @@
 
 import time
 import collections
+import ctypes
 import memory
 
 EXE_ADDR = 0x00400000
@@ -20,6 +21,10 @@ HD_GAME_ADDR = {
     'play8_gold': 0x01371534 + 7 * 0x0168,
     # 第1个英雄： 欧灵 基地，每个英雄间隔 0x0492
     'hero_1': 0x01371FD0,
+    # 第1玩家地址，每个玩家间隔 0x0168
+    'player1': 0x01371480,
+    # 第1个城镇，每个城镇间隔 0x168
+    'town_1_base': 0x1371fc4,       # [0x1371fc4] [hero_1 - 0x0c]
 }
 NO_HD_GAME_ADDR = {
     # 红色玩家黄金资源地址，每个玩家间隔 0x0168； 宝石 水晶 硫磺 石头 水银 木头 依次减 0x04 字节
@@ -33,9 +38,13 @@ NO_HD_GAME_ADDR = {
     'play8_gold': 0x01620BEC + 7 * 0x0168,
     # 第1个英雄： 欧灵 基地，每个英雄间隔 0x0492
     'hero_1': 0x01621688,
+    # 第1玩家地址，每个玩家间隔 0x0168
+    'player1': 0x01620b38,
+    # 第1个城镇，每个城镇间隔 0x168
+    'town_1_base': 0x0162167C,       # [0x0162167C]  [hero_1 - 0x0c], [hero_1 - 0x08]: 最后城镇的地址
 }
 
-GAME_ADDR = HD_GAME_ADDR
+GAME_ADDR = NO_HD_GAME_ADDR
 
 # HD版
 HD_POINTER = EXE_ADDR + 0x0029CCFC
@@ -68,6 +77,86 @@ def ints2bytes(numbers, size=4, unsigned=True):
     return b''.join(ret)
 
 
+# ===================数据结构=====================
+class Player(ctypes.Structure):
+    # size 0x168
+    _fields_ = [
+        ('playeridx', ctypes.c_int8),       # 0x00 0~7
+        ('heroescount', ctypes.c_uint8),    # 0x01
+        ('_u1', ctypes.c_char * 2),
+        ('curhero', ctypes.c_int32),        # 0x04 当前英雄编号 0~156
+        ('heroes', ctypes.c_uint32 * 8),    # 0x08 所有英雄编号 0~156
+        ('herol', ctypes.c_int32),          # 0x28
+        ('heror', ctypes.c_int32),          # 0x2c
+        ('_u2', ctypes.c_char * 13),
+        ('daysleft', ctypes.c_int8),        # 0x3a
+        ('townscount', ctypes.c_int8),      # 0x3e
+        ('curtown', ctypes.c_uint8),        # 0x3f 当前城镇编号 0~47
+        ('towns', ctypes.c_uint8 * 48),     # 0x40 所有城镇编号 0~47
+        ('_u3', ctypes.c_char * 4),
+        ('tophero', ctypes.c_int32),
+        ('_u4', ctypes.c_char * 0x54),
+        ('name', ctypes.c_char * 21),
+        ('activeflag', ctypes.c_int8),      # 1 active 0 sleep
+        ('playerflag', ctypes.c_int8),      # 1 player 0 computer
+        ('_u5', ctypes.c_char * 0x45),
+        ('resimp', ctypes.c_double * 8),
+    ]
+
+    def to_json(self):
+        data = {
+            'playeridx': self.playeridx,
+            'heroescount': self.heroescount,
+            'curhero': self.curhero,
+            'heroes': list(self.heroes),
+            'daysleft': self.daysleft,
+            'townscount': self.townscount,
+            'curtown': self.curtown,
+            'towns': list(self.towns),
+            'name': bytes2str(self.name, 'gbk'),
+            'activeflag': self.activeflag,
+            'playerflag': self.playerflag,
+        }
+        return data
+
+
+class Town(ctypes.Structure):
+    # size 0x168
+    _fields_ = [
+        ('idx', ctypes.c_int8),             # 0x00 0~47
+        ('player', ctypes.c_int8),          # 0x01 0~7
+        ('today_builded', ctypes.c_int8),   # 0x02 今日已建造: 0, 1
+        ('_u1', ctypes.c_char * 1),
+        ('type', ctypes.c_int8),            # 0x04 城镇类型：城堡, 壁垒, 楼塔, 地狱, 墓园, 地下城, 据点, 要塞, 元素城
+        ('xAxis', ctypes.c_uint8),          # 0x05 坐标
+        ('yAxis', ctypes.c_uint8),          # 0x06
+        ('zAxis', ctypes.c_uint8),          # 0x07
+        ('_u2', ctypes.c_char * (0xc8 - 0x07 - 1)),
+        ('name_pointer', ctypes.c_uint32),  # 0xc8 城镇名字指针
+        ('_u3', ctypes.c_char * (0x0153 - 0xc8 - 4)),
+        ('artifact_visible', ctypes.c_uint8),       # 0x0153 显示神器   和0x04进行&操作后不为0
+        ('_u4', ctypes.c_char * (0x015b - 0x0153 - 1)),
+        ('artifact_builded', ctypes.c_uint8),       # 0x015b 建造神器
+        ('_u5', ctypes.c_char * (0x0168 - 0x015b - 1)),
+    ]
+
+    def to_json(self):
+        data = {
+            'idx': self.idx,
+            'player': self.player,
+            'today_builded': self.today_builded,
+            'type': self.type,
+            'xAxis': self.xAxis,
+            'yAxis': self.yAxis,
+            'zAxis': self.zAxis,
+            'name_pointer': self.name_pointer,
+            'artifact_visible': self.artifact_visible,
+            'artifact_builded': self.artifact_builded,
+        }
+        return data
+
+
+# ===================读取游戏=====================
 def get_current_play(process):
     """获取当前玩家号"""
     pointer = memory.read_process(process, POINTER, 4)
@@ -115,6 +204,8 @@ def get_hero_info(process, num):
     data['num'] = num
     data['xAxis'] = bytes2number(buf, 0x00, 2),     # 坐标从左上角算起
     data['yAxis'] = bytes2number(buf, 0x02, 2),
+    data['zAxis'] = bytes2number(buf, 0x04, 2),     # 0:up world, 1: under world
+    data['visible'] = bytes2number(buf, 0x05, 1),
     data['color'] = PLAYER_COLORS[buf[0x22]],
     data['name'] = bytes2str(buf[0x23:(0x23+30)]),
     data['type'] = bytes2number(buf, 0x30, 1),      # 英雄类型 name + 13
@@ -228,7 +319,7 @@ def get_hero_info(process, num):
     return data
 
 
-def get_all_resouces(process):
+def get_all_resources(process):
     # 获取所有玩家资源数据
     i = 0
     number = 8
@@ -278,6 +369,48 @@ def get_game_base_addr(pid):
     return data
 
 
+def get_town_info(process, num):
+    """ 获取城镇信息"""
+    size = 0x168
+    base_addr = memory.read_process(process, GAME_ADDR['town_1_base'], 4)
+    addr = base_addr + (size * num)
+    buf = memory.read_process(process, addr, size)
+
+    town = Town.from_buffer_copy(buf, 0)
+    data = town.to_json()
+    if town.name_pointer == 0 or town.name_pointer == 0xFFFFFFFF:
+        data['name'] = ''
+    else:
+        data['name'] = bytes2str(memory.read_process(process, town.name_pointer, 20), 'gbk')
+    data['artifact'] = (data['artifact_visible'] & 0x04) and (data['artifact_builded'] & 0x04)
+
+    # file_name = 'town-%d' % (num)
+    # print('town_name:', file_name)
+    # with open(file_name, 'w') as fp:
+    #     i = 0
+    #     while i < size:
+    #         if (i % 16) == 0:
+    #             fp.write('%X: ' % (addr + i))
+    #         fp.write("%02x " % (buf[i]))
+    #         i += 1
+    #         if (i % 16) == 0:
+    #             fp.write('\n')
+    return data
+
+
+def list_all_player(process):
+    """获取所有玩家信息"""
+    buf = memory.read_process(process, GAME_ADDR['player1'], 0x168 * 8)
+    i = 0
+    data = []
+    while i < 8:
+        player = Player.from_buffer_copy(buf, 0x168 * i)
+        i += 1
+        data.append(player.to_json())
+    return data
+
+
+# ===================修改游戏=====================
 def set_hero_info(process, num, offset, value, size):
     """修改英雄属性"""
     addr = GAME_ADDR['hero_1'] + (0x0492 * num) + offset
@@ -300,8 +433,16 @@ def set_resources(process, player, data):
     memory.write_process(process, addr, value, 4*7)
 
 
+def set_town_info(process, num, offset, value, size):
+    """修改城镇属性"""
+    town_size = 0x168
+    base_addr = memory.read_process(process, GAME_ADDR['town_1_base'], 4)
+    addr = base_addr + (town_size * num) + offset
+    memory.write_process(process, addr, value, size)
+
+
 def main():
-    pid = 1944
+    pid = 0x588
 
     process = memory.inject_process(pid)
     if not process:
@@ -311,19 +452,18 @@ def main():
     for m in addrs:
         print(m, hex(addrs[m]))
 
-    for hero in list_all_hero(process):
-        print(hero['num'], hex(hero['addr']), hero['name'], hero['player'])
-    # for item in get_all_resouces(process):
-    #     for resouece in item['data']:
-    #         print(item['color'], resouece['name'], resouece['value'])
-    data = get_hero_info(process, 0)
-    for field in data:
-        print(field, data[field])
-    # time.sleep(1)
-    # data = get_hero_info(process, 1)
+    # for hero in list_all_hero(process):
+    #     print(hero['num'], hex(hero['addr']), hero['name'], hero['player'])
 
     # learn_all_magic(process, 0)
-    print(get_current_play(process))
+    # print(get_current_play(process))
+    info = get_town_info(process, 0)
+    print(info)
+    # players = list_all_player(process)
+    # for player in players:
+    #     print('playeridx:', player['playeridx'])
+    #     print('curtown:', player['curtown'])
+    #     print('towns:', player['towns'])
 
     memory.close_process(process)
 

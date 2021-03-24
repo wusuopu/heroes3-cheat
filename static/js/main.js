@@ -294,6 +294,7 @@ const ALL_CREATURES = {
 }
 
 const BYTES_MAX = {
+  1: 0xff,
   2: 0xffff,
   4: 0xffffffff,
 }
@@ -386,12 +387,24 @@ const HERO_OFFSET_MAP = {
   '有魔法书': [0x1B5, 4],
   '士气幸运': [0x107, 1],       // 0b11000000 0xC0 高士气，高幸运
 }
+// 城镇各项值的偏移地址，战胜的字节数
+const TOWN_OFFSET_MAP = {
+  'today_builded': [0x02, 1],
+  'artifact': [-1, 1],      // 虚拟值
+  'artifact_visible': [0x0153, 1],
+  'artifact_builded': [0x015b, 1],
+}
+// 所有城镇类型
+const TOWN_TYPES = ['城堡', '壁垒', '楼塔', '地狱', '墓园', '地下城', '据点', '要塞', '元素城']
+
+
 _.times(64, (i) => {
   HERO_OFFSET_MAP['行囊' + _.padStart(i+1, 2, '0')] = [0x1d4 + (8*i), 4]
   HERO_OFFSET_MAP['行囊' + _.padStart(i+1, 2, '0') + '属性'] = [0x1d4 + (8*i) + 4, 4]
 })
 
 
+// ================================================================================
 class Modal extends React.Component {
   constructor(props) {
     super(props)
@@ -425,6 +438,7 @@ class Header extends React.Component {
       <ul className="header">
         <li className={"tab" + (this.props.active === 'resource' ? " active" : "")} onClick={this.handleClick('resource')}>资源修改</li>
         <li className={"tab" + (this.props.active === 'hero' ? " active" : "")} onClick={this.handleClick('hero')}>英雄修改</li>
+        <li className={"tab" + (this.props.active === 'town' ? " active" : "")} onClick={this.handleClick('town')}>城镇修改</li>
       </ul>
     )
   }
@@ -471,7 +485,7 @@ class HeroAvator extends React.Component {
     return (
       <div className={`hero-avator ${this.props.active ? 'active' : ''}`} onClick={this.handleClick}>
         <div>
-          <i className={`icon icon-heros-${avator}`}></i>
+          <i className={`icon icon-heroes-${avator}`}></i>
         </div>
         <div>{name}</div>
       </div>
@@ -510,14 +524,14 @@ class ResourceTab extends React.Component {
     )
   }
   renderForm () {
-    const resoueces = (this.state.resources[this.state.player] || {}).data || []
+    const resources = (this.state.resources[this.state.player] || {}).data || []
     const eles = _.map(RESOURCE_NAMES, (name, index) => {
       return (
         <div className="resource-item" key={index}>
           <label>{name}</label>
           <i className={`icon-resources icon-resources-${index}`}></i>
           <input
-            value={resoueces[index]}
+            value={resources[index] || 0}
             onChange={(ev) => this.handleValueChange(ev.target.value, index)}
             type="number"
             min={0}
@@ -527,10 +541,10 @@ class ResourceTab extends React.Component {
       )
     })
     return (
-      <div className="resource-list">
+      <div className="resource-list" key={this.state.player}>
         {eles}
         <div className="resource-item">
-          <button onClick={this.handleModify}>修改资源</button>
+          <button className="confirm" onClick={this.handleModify}>修改资源</button>
         </div>
       </div>
     )
@@ -545,24 +559,24 @@ class ResourceTab extends React.Component {
     if (value > 0x7fffffff) { value = 0x7fffffff }
     data[index] = value
 
-    const resouece = _.assign({}, this.state.resources[this.state.player] || {}, {data:data})
+    const resource = _.assign({}, this.state.resources[this.state.player] || {}, {data:data})
     const resources = _.concat([], this.state.resources)
-    resources[this.state.player] = resouece
+    resources[this.state.player] = resource
     this.setState({resources: resources})
   }
   handleModify = () => {
     const player = this.state.player
     const data = _.concat([], (this.state.resources[player] || {}).data || [])
-    axios.put('/api/v1/resoueces', { player: player, data: data }).then(() => {
+    axios.put('/api/v1/resources', { player: player, data: data }).then((res) => {
       this.setState({
         resources: res.data
       })
-    }).catch(() => {
+    }).catch((e) => {
       this.setState({resources: []})
     })
   }
   fetchData = () => {
-    axios.get('/api/v1/resoueces').then((res) => {
+    axios.get('/api/v1/resources').then((res) => {
       this.setState({
         resources: res.data
       })
@@ -578,7 +592,7 @@ class HeroTab extends React.Component {
     super(props)
     this.state = {
       player: undefined,
-      heros: [],
+      heroes: [],
       currentHero: undefined,
       heroInfo: {},
       objModalVisible: false,
@@ -606,18 +620,23 @@ class HeroTab extends React.Component {
     )
   }
   renderHeroSelect () {
-    const heros = _.filter(this.state.heros, {player: this.state.player})
-    const options = _.map(heros, (h) => {
+    const heroes = _.filter(
+      _.get(this.props.game.players[this.state.player], 'heroes', []),
+      (i) => i !== 0xff
+    )
+    const options = _.map(heroes, (id, index) => {
+      let h = this.state.heroes[id]
+      if (!h) { return (<div key={index} />) }
       return (
         <HeroAvator
           active={h.num === this.state.currentHero}
-          key={h.num}
+          key={index}
           hero={h}
           onClick={this.handleHeroSelect}
         />
       )
     })
-    let disabled = _.isEmpty(heros)
+    let disabled = _.isEmpty(heroes)
     let choose
     if (!disabled) {
       choose = (
@@ -635,7 +654,15 @@ class HeroTab extends React.Component {
     )
   }
   renderForm () {
-    if (_.isUndefined(this.state.currentHero) || _.get(this.state.heroInfo, 'num') !== this.state.currentHero) { return }
+    const heroIndexes = _.filter(
+      _.get(this.props.game.players[this.state.player], 'heroes', []),
+      (i) => i !== 0xff
+    )
+    if (
+      _.isUndefined(this.state.currentHero) ||
+      _.get(this.state.heroInfo, 'num') !== this.state.currentHero ||
+      !_.includes(heroIndexes, this.state.currentHero)
+    ) { return }
 
     const info = this.state.heroInfo
 
@@ -901,10 +928,10 @@ class HeroTab extends React.Component {
     this.setState({player: this.props.game.player})
   }
   fetchData = () => {
-    axios.get('/api/v1/heros').then((res) => {
-      this.setState({heros: res.data})
+    axios.get('/api/v1/heroes').then((res) => {
+      this.setState({heroes: res.data})
     }).catch(() => {
-      this.setState({heros: []})
+      this.setState({heroes: []})
     })
   }
   handleHeroSelect = (num) => {
@@ -918,7 +945,7 @@ class HeroTab extends React.Component {
       currentHero = this.state.currentHero
     }
     if (currentHero >= 0) {
-      axios.get(`/api/v1/heros/${currentHero}`).then((res) => {
+      axios.get(`/api/v1/heroes/${currentHero}`).then((res) => {
         let data = res.data
         for (let key in data) {
           if (_.isArray(data[key])) {
@@ -926,9 +953,9 @@ class HeroTab extends React.Component {
           }
         }
         this.setState({heroInfo: data})
-    }).catch(() => {
-      this.setState({heroInfo: {}})
-    })
+      }).catch(() => {
+        this.setState({heroInfo: {}})
+      })
     }
   }
 
@@ -969,7 +996,7 @@ class HeroTab extends React.Component {
       let currentHero = this.state.currentHero
       if (_.isEmpty(data)) { return }
       if (currentHero >= 0) {
-        axios.put(`/api/v1/heros/${currentHero}`, {data}).then((res) => {
+        axios.put(`/api/v1/heroes/${currentHero}`, {data}).then((res) => {
           let data = res.data
           for (let key in data) {
             if (_.isArray(data[key])) {
@@ -986,7 +1013,7 @@ class HeroTab extends React.Component {
   handleLearnAllMagic = () => {
     let currentHero = this.state.currentHero
     if (currentHero >= 0) {
-      axios.put(`/api/v1/heros/${currentHero}/magic`, {}).then((res) => {
+      axios.put(`/api/v1/heroes/${currentHero}/magic`, {}).then((res) => {
         let data = res.data
         for (let key in data) {
           if (_.isArray(data[key])) {
@@ -1123,6 +1150,204 @@ class HeroTab extends React.Component {
 }
 
 // ================================================================================
+class TownTab extends React.Component {
+  constructor(props) {
+    super(props)
+    this.state = {
+      player: undefined,
+      towns: [],
+      townInfo: {},
+      currentTown: undefined
+    }
+  }
+  townIndexes (player, players) {
+    players = players || this.props.game.players
+    player = player || this.state.player
+    return _.filter(
+      _.get(players[player], 'towns', []),
+      (i) => i !== 0xff
+    )
+  }
+  render () {
+    let disabled = _.isUndefined(this.props.game.player)    // 游戏还未开始
+
+    return (
+      <div className="tab-item">
+        <PlayerSelect
+          disabled={disabled}
+          onSelect={(player) => this.setState({player: player, currentTown: undefined})}
+          value={this.state.player}
+          onRefresh={this.fetchData}
+        />
+
+        {this.renderTownSelect()}
+
+        {this.renderForm()}
+      </div>
+    )
+  }
+  renderTownSelect () {
+    let townIndexes = this.townIndexes(this.state.player)
+    let disabled = _.isEmpty(townIndexes)
+    const options = _.map(townIndexes, (id) => {
+      let town = _.find(this.state.towns, {idx: id})
+      if (!town) { return <div key={id} /> }
+      return (
+        <div
+          key={id}
+          className={`town-avator ${this.state.currentTown === id ? 'active' : ''}`}
+          onClick={() => this.handleTownSelect(id)}
+        >
+          <div><i className={`icon icon-towns-${town.type}`}></i></div>
+          <div>{town.name}</div>
+        </div>
+      )
+    })
+    let choose
+    if (!disabled) {
+      choose = (
+        <div className="town-list">
+          {options}
+        </div>
+      )
+    }
+    return (
+      <div className={`town-select ${disabled ? 'disabled' : ''}`}>
+        选择需要修改的城镇：
+        <button disabled={disabled} onClick={this.handleRefreshTown}>刷新当前城镇数据</button>
+        {choose}
+      </div>
+    )
+  }
+  renderForm () {
+    let townIndexes = this.townIndexes()
+    if (
+      _.isUndefined(this.state.currentTown) ||
+      _.get(this.state.townInfo, 'idx') !== this.state.currentTown ||
+      !_.includes(townIndexes, this.state.currentTown)
+    ) { return }
+
+    const info = this.state.townInfo
+
+    return (
+      <div className="town-info">
+        {this.renderProperySection(info)}
+      </div>
+    )
+  }
+  renderProperySection (info) {
+    const fields = ['artifact_builded', 'artifact_visible', 'today_builded']
+    return (
+      <div className="info-section">
+        <h2>基本属性 <button className="confirm" onClick={this.handleProperyModify(fields)}>确认修改</button></h2>
+        <ul className="info-list">
+          <li className="info-item">
+            <label>建造神器</label>
+            <input type="checkbox" checked={info['artifact']} onChange={(ev) => {
+              let checked = ev.nativeEvent.target.checked
+              let mask = checked ? 0x04 : 0xfb
+              let fields = ['artifact_visible', 'artifact_builded']
+              let values = _.map(fields, (f) => {
+                if (checked) { return info[f] | mask }
+                else { return info[f] & mask }
+              })
+              fields.push('artifact')
+              values.push(checked)
+              this.handleMultiProperyChange(fields, values)
+            }} />
+          </li>
+          <li className="info-item">
+            <label>今日已建造</label>
+            <input type="checkbox" checked={info['today_builded']} onChange={(ev) => {
+              let checked = ev.nativeEvent.target.checked
+              let value = Boolean(checked)
+              this.handleProperyChange('today_builded', value)
+            }} />
+          </li>
+        </ul>
+      </div>
+    )
+  }
+  componentDidMount () {
+    this.setState({player: this.props.game.player})
+  }
+  componentDidUpdate(prevProps, prevState) {
+    if (prevState.player !== this.state.player || !_.isEqual(prevProps.game.players, this.props.game.players)) {
+      this.fetchData()
+    }
+  }
+  fetchData = (player) => {
+    player = player || this.state.player
+    let townIndexes = this.townIndexes(player)
+    if (_.isEmpty(townIndexes)) { return }
+
+    axios.get('/api/v1/towns', {params: { ids: townIndexes }}).then((res) => {
+      this.setState({towns: res.data})
+    }).catch(() => {
+      this.setState({towns: []})
+    })
+  }
+  handleTownSelect = (num) => {
+    let currentTown = Number(num)
+    this.setState({currentTown: currentTown})
+    this.handleRefreshTown(currentTown)
+  }
+  handleRefreshTown = (currentTown) => {
+    // 刷新当前城镇数据
+    if (!_.isNumber(currentTown)) {
+      currentTown = this.state.currentTown
+    }
+    if (currentTown >= 0) {
+      axios.get(`/api/v1/towns/${currentTown}`).then((res) => {
+        let data = res.data
+        this.setState({townInfo: data})
+      }).catch(() => {
+        this.setState({townInfo: {}})
+      })
+    }
+  }
+  handleProperyChange = (field, value) => {
+    value = Number(value)
+    let max = BYTES_MAX[TOWN_OFFSET_MAP[field][1]]
+    if (value > max) { value = max }
+    let townInfo = _.assign({}, this.state.townInfo, {[field]: value})
+    this.setState({townInfo})
+  }
+  handleMultiProperyChange = (fields, values) => {
+    let data = {}
+    _.each(fields, (field, index) => {
+      let value = Number(values[index])
+      let max = BYTES_MAX[TOWN_OFFSET_MAP[field][1]]
+      if (value > max) { value = max }
+      data[field] = value
+    })
+    let townInfo = _.assign({}, this.state.townInfo, data)
+    this.setState({townInfo})
+  }
+  handleProperyModify = (fields) => {
+    // 修改城镇属性
+    return () => {
+      const data = _.map(fields, (field) => {
+        return {
+          offset: TOWN_OFFSET_MAP[field][0],
+          size: TOWN_OFFSET_MAP[field][1],
+          value: this.state.townInfo[field],
+        }
+      })
+      let currentTown = this.state.currentTown
+      if (_.isEmpty(data)) { return }
+      if (currentTown >= 0) {
+        axios.put(`/api/v1/towns/${currentTown}`, {data}).then((res) => {
+          this.setState({townInfo: res.data})
+        }).catch(() => {
+          this.setState({townInfo: {}})
+        })
+      }
+    }
+  }
+}
+
+// ================================================================================
 class Main extends React.Component {
   constructor(props) {
     super(props)
@@ -1130,11 +1355,12 @@ class Main extends React.Component {
       tab: '',
       game: {
         player: undefined,
+        players: [],
         pid: undefined,
         hd: undefined,
       },
       resources: [],
-      heros: [],
+      heroes: [],
     }
 
     this._timer = undefined
@@ -1155,6 +1381,7 @@ class Main extends React.Component {
         <div className="body">
           {this.renderResource()}
           {this.renderHero()}
+          {this.renderTown()}
         </div>
       </div>
     )
@@ -1188,20 +1415,26 @@ class Main extends React.Component {
       <HeroTab key={this.state.game.player} game={this.state.game} />
     )
   }
+  renderTown () {
+    if (!this.state.game.pid || this.state.tab !== 'town') { return }
+    return (
+      <TownTab key={this.state.game.player} game={this.state.game} />
+    )
+  }
   handleTabClick = (tab) => {
     this.setState({tab: tab})
   }
   health_check = () => {
     axios.get('/api/v1/game_info').then((res) => {
-      this.setState({game: {
-        player: _.get(res.data, 'player.num'),
-        pid: res.data.pid,
-        hd: res.data.hd,
-      }})
+      let data = res.data
+      const player = _.find(data.players, {playerflag: 1})
+      data.player = _.get(player, 'playeridx')
+      this.setState({game: data})
     }).catch((error) => {
       console.log('health_check error:', error)
       this.setState({game: {
         player: undefined,
+        players: [],
         pid: undefined,
         hd: undefined,
       }})

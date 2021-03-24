@@ -9,7 +9,7 @@ import h3
 import memory
 
 DEBUG = bool(os.environ.get('DEBUG'))
-# DEBUG = True
+DEBUG = True
 bottle.debug(DEBUG)
 
 PID = None          # 当前游戏进程ID
@@ -65,7 +65,7 @@ def get_game_info():
         return render_json({'error': '游戏未运行', 'error_no': 0}, 500)
 
     try:
-        player = h3.get_current_play(PROCESS)
+        players = h3.list_all_player(PROCESS)
     except Exception:
         PID = None
         PROCESS = None
@@ -75,39 +75,39 @@ def get_game_info():
     data = {
         'pid': PID,
         'hd': IS_HD,
-        'player': player,
+        'players': players,
     }
 
     return render_json(data)
 
 
 # 获取/修改资源
-@bottle.get('/api/v1/resoueces')
-def get_all_resouces():
-    return render_json(h3.get_all_resouces(PROCESS))
+@bottle.get('/api/v1/resources')
+def index_resources():
+    return render_json(h3.get_all_resources(PROCESS))
 
 
-@bottle.put('/api/v1/resoueces')
-def set_resources():
+@bottle.put('/api/v1/resources')
+def update_resources():
     player = bottle.request.json['player']
     data = bottle.request.json['data']
     h3.set_resources(PROCESS, player, data)
-    return render_json(h3.get_all_resouces(PROCESS))
+    return render_json(h3.get_all_resources(PROCESS))
 
 
 # 获取/修改英雄数据
-@bottle.get('/api/v1/heros')
-def get_all_heros():
+@bottle.get('/api/v1/heroes')
+def index_heoro():
     return render_json(h3.list_all_hero(PROCESS))
 
 
-@bottle.get('/api/v1/heros/:num')
-def get_hero(num):
+@bottle.get('/api/v1/heroes/:num')
+def show_hero(num):
     return render_json(h3.get_hero_info(PROCESS, int(num)))
 
 
-@bottle.put('/api/v1/heros/:num')
-def set_heros(num):
+@bottle.put('/api/v1/heroes/:num')
+def update_hero(num):
     num = int(num)
     data = bottle.request.json['data']
     for item in data:
@@ -115,11 +115,34 @@ def set_heros(num):
     return render_json(h3.get_hero_info(PROCESS, num))
 
 
-@bottle.put('/api/v1/heros/:num/magic')
+@bottle.put('/api/v1/heroes/:num/magic')
 def learn_all_magic(num):
     num = int(num)
     h3.learn_all_magic(PROCESS, num)
     return render_json(h3.get_hero_info(PROCESS, num))
+
+
+@bottle.get('/api/v1/towns')
+def index_town():
+    data = []
+    ids = bottle.request.query.getlist('ids[]')
+    for idx in ids:
+        data.append(h3.get_town_info(PROCESS, int(idx)))
+    return render_json(data)
+
+
+@bottle.get('/api/v1/towns/:num')
+def show_town(num):
+    return render_json(h3.get_town_info(PROCESS, int(num)))
+
+
+@bottle.put('/api/v1/towns/:num')
+def update_town(num):
+    num = int(num)
+    data = bottle.request.json['data']
+    for item in data:
+        h3.set_town_info(PROCESS, num, item['offset'], item['value'], item['size'])
+    return render_json(h3.get_town_info(PROCESS, num))
 
 
 if __name__ == '__main__':
