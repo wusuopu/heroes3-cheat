@@ -13,4 +13,6 @@
 
 目前经过测试可支持《死亡阴影》的普通版本和HD版本的修改。
 
+![](screenshots/image00.jpg)
 ![](screenshots/image01.jpg)
+![](screenshots/image02.jpg)

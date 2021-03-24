@@ -9,7 +9,6 @@ import h3
 import memory
 
 DEBUG = bool(os.environ.get('DEBUG'))
-DEBUG = True
 bottle.debug(DEBUG)
 
 PID = None          # 当前游戏进程ID
