@@ -3,9 +3,14 @@
 
 import ctypes
 import ctypes.wintypes
-import os
+import platform
 import struct
 import log
+
+if platform.architecture()[0] == '32bit':
+    IS_32 = True
+else:
+    IS_32 = False
 
 # https://msdn.microsoft.com/en-us/library/aa383751#DWORD_PTR
 if ctypes.sizeof(ctypes.c_void_p) == ctypes.sizeof(ctypes.c_ulonglong):
@@ -14,6 +19,8 @@ elif ctypes.sizeof(ctypes.c_void_p) == ctypes.sizeof(ctypes.c_ulong):
     DWORD_PTR = ctypes.c_ulong
 PVOID = ctypes.wintypes.LPVOID
 SIZE_T = ctypes.c_size_t
+
+NTDLL = ctypes.WinDLL('ntdll.dll')
 
 # 进程权限相关：https://docs.microsoft.com/en-us/windows/desktop/ProcThread/process-security-and-access-rights
 PROCESS_QUERY_INFORMATION = 0x0400
@@ -233,9 +240,7 @@ def get_system_info():
 
 
 def read_process(hProcess, base_addr, byte_num=2):
-    """
-    读取特定内存的值
-    """
+    """读取特定内存的值"""
     if byte_num == 1:
         buf = ctypes.c_byte()
     elif byte_num == 2:
@@ -262,10 +267,40 @@ def read_process(hProcess, base_addr, byte_num=2):
     return getattr(buf, 'raw', buf.value)
 
 
+def read_process64(hProcess, base_addr, byte_num):
+    """64位系统读取特定内存地址"""
+    if byte_num == 1:
+        buf = ctypes.c_byte()
+    elif byte_num == 2:
+        buf = ctypes.c_short()
+    elif byte_num == 4:
+        buf = ctypes.c_int32()
+    elif byte_num == 8:
+        buf = ctypes.c_int64()
+    else:
+        buf = ctypes.c_buffer(b'', byte_num)
+    nread = SIZE_T()
+    # 第一个参数是我们通过OpenProcess获取的进程句柄，在python中要记得把这个句柄转换成int类型，默认其实是个句柄类型，不会出错
+    # 第二个参数其实就是我们要读取的地址
+    # 第三个参数是一个指针，我们通过ctypes中的byref方法可以将一个指针传进去，函数会把读取到的参数放进这个指针指向的地方，里也就是我们的ret中
+    # 第四个参数是我们需要读取的长度
+    # 第五个参数也是一个指针，存放实际读取的长度，可为NULL
+    ret = NTDLL.NtWow64ReadVirtualMemory64(
+        int(hProcess),
+        ctypes.c_ulonglong(base_addr),
+        ctypes.byref(buf),
+        ctypes.c_ulonglong(byte_num),
+        ctypes.byref(nread)
+    )
+    if not ret:
+        print_error('NtWow64ReadVirtualMemory64')
+        raise Exception('NtWow64ReadVirtualMemory64')
+
+    return getattr(buf, 'raw', buf.value)
+
+
 def write_process(hProcess, base_addr, value, byte_num=2):
-    """
-    往特定内存地址写入数据
-    """
+    """往特定内存地址写入数据"""
     if byte_num == 1:
         buf = ctypes.c_byte(value)
     elif byte_num == 2:
@@ -282,6 +317,31 @@ def write_process(hProcess, base_addr, value, byte_num=2):
         base_addr,
         ctypes.byref(buf),
         ctypes.sizeof(buf),
+        ctypes.byref(nwrite)
+    )
+
+    return not not ret
+
+
+def write_process64(hProcess, base_addr, value, byte_num):
+    """64位系统写入特定内存地址"""
+    if byte_num == 1:
+        buf = ctypes.c_byte(value)
+    elif byte_num == 2:
+        buf = ctypes.c_short(value)
+    elif byte_num == 4:
+        buf = ctypes.c_int32(value)
+    elif byte_num == 8:
+        buf = ctypes.c_int64(value)
+    else:
+        buf = ctypes.c_buffer(value, byte_num)
+    nwrite = SIZE_T()
+
+    ret = NTDLL.NtWow64WriteVirtualMemory64(
+        int(hProcess),
+        ctypes.c_ulonglong(base_addr),
+        ctypes.byref(buf),
+        ctypes.c_ulonglong(byte_num),
         ctypes.byref(nwrite)
     )
 
@@ -306,6 +366,13 @@ def inject_process(pid):
 
     return hProcess
 
+
+def is_process32(hProcess):
+    """检查目标进程是否32位"""
+    # https://docs.microsoft.com/en-us/windows/win32/api/wow64apiset/nf-wow64apiset-iswow64process?redirectedfrom=MSDN
+    ret = ctypes.c_bool()
+    ctypes.windll.kernel32.IsWow64Process(hProcess, ctypes.byref(ret))
+    return not ret.value
 
 def main():
     # inject_process(2996)
