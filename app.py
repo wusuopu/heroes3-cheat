@@ -43,25 +43,26 @@ def get_game_info():
         for name in processes:
             if name.startswith(b'Heroes3') and name.endswith(b'.exe'):
                 pid = processes[name]
+                IS_HD = name.endswith(b'HD.exe')
+                break
         if pid:
             PID = pid
             PROCESS = memory.inject_process(PID)
 
     if not PID:
+        h3.GAME_INITED = False
         return render_json({'error': '游戏未运行', 'error_no': 0}, 500)
 
     if not PROCESS:
         PID = None
+        h3.GAME_INITED = False
         return render_json({'error': '游戏未运行', 'error_no': 0}, 500)
 
-    try:
-        if IS_HD is None:
-            info = h3.get_game_base_addr(PID)
-            IS_HD = info.get('HD', None)
-    except Exception:
-        PID = None
-        PROCESS = None
-        return render_json({'error': '游戏未运行', 'error_no': 0}, 500)
+    if not h3.GAME_INITED:
+        h3.init_game_base_addr(PROCESS, IS_HD)
+
+    if not h3.GAME_INITED:
+        return render_json({'status': False, 'pid': PID, 'hd': IS_HD, 'players': []}, 200)
 
     try:
         players = h3.list_all_player(PROCESS)
@@ -72,6 +73,7 @@ def get_game_info():
         return render_json({'error': '游戏未运行', 'error_no': 0}, 500)
 
     data = {
+        'status': True,
         'pid': PID,
         'hd': IS_HD,
         'players': players,

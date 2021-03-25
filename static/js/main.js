@@ -1403,6 +1403,7 @@ class Main extends React.Component {
         players: [],
         pid: undefined,
         hd: undefined,
+        status: false,
       },
       resources: [],
       heroes: [],
@@ -1449,19 +1450,19 @@ class Main extends React.Component {
     )
   }
   renderResource () {
-    if (!this.state.game.pid || this.state.tab !== 'resource') { return }
+    if (!this.state.game.status || this.state.tab !== 'resource') { return }
     return (
       <ResourceTab key={this.state.game.player} game={this.state.game} />
     )
   }
   renderHero () {
-    if (!this.state.game.pid || this.state.tab !== 'hero') { return }
+    if (!this.state.game.status || this.state.tab !== 'hero') { return }
     return (
       <HeroTab key={this.state.game.player} game={this.state.game} />
     )
   }
   renderTown () {
-    if (!this.state.game.pid || this.state.tab !== 'town') { return }
+    if (!this.state.game.status || this.state.tab !== 'town') { return }
     return (
       <TownTab key={this.state.game.player} game={this.state.game} />
     )

@@ -7,8 +7,8 @@ import ctypes
 import memory
 
 EXE_ADDR = 0x00400000
-SMACKW32_DLL_ADDR = 0x10000000
 
+# 以下是32位系统的默认地址，64位系统会不一样
 HD_GAME_ADDR = {
     # 红色玩家黄金资源地址，每个玩家间隔 0x0168； 宝石 水晶 硫磺 石头 水银 木头 依次减 0x04 字节
     'play1_gold': 0x01371534 + 0 * 0x0168,
@@ -51,6 +51,7 @@ HD_POINTER = EXE_ADDR + 0x0029CCFC
 # 非HD版
 NO_HD_POINTER = EXE_ADDR + 0x0042B0BC
 POINTER = HD_POINTER
+GAME_INITED = False
 
 # 所有玩家颜色
 PLAYER_COLORS = ['红', '蓝', '褐', '绿', '棕', '紫', '青', '粉']
@@ -83,23 +84,31 @@ class Player(ctypes.Structure):
     _fields_ = [
         ('playeridx', ctypes.c_int8),       # 0x00 0~7
         ('heroescount', ctypes.c_uint8),    # 0x01
-        ('_u1', ctypes.c_char * 2),
+        ('_u1', ctypes.c_char * 2),         # 0x02
         ('curhero', ctypes.c_int32),        # 0x04 当前英雄编号 0~156
         ('heroes', ctypes.c_uint32 * 8),    # 0x08 所有英雄编号 0~156
         ('herol', ctypes.c_int32),          # 0x28
         ('heror', ctypes.c_int32),          # 0x2c
-        ('_u2', ctypes.c_char * 13),
-        ('daysleft', ctypes.c_int8),        # 0x3a
+        ('_u2', ctypes.c_char * 13),        # 0x30
+        ('daysleft', ctypes.c_int8),        # 0x3d
         ('townscount', ctypes.c_int8),      # 0x3e
         ('curtown', ctypes.c_uint8),        # 0x3f 当前城镇编号 0~47
         ('towns', ctypes.c_uint8 * 48),     # 0x40 所有城镇编号 0~47
-        ('_u3', ctypes.c_char * 4),
-        ('tophero', ctypes.c_int32),
-        ('_u4', ctypes.c_char * 0x54),
-        ('name', ctypes.c_char * 21),
+        ('_u3', ctypes.c_char * 4),         # 0x70
+        ('tophero', ctypes.c_int32),        # 0x74
+        ('_u4', ctypes.c_char * 0x24),      # 0x78
+        ('wood', ctypes.c_uint32),          # 0x9c  木头
+        ('mercury', ctypes.c_uint32),       # 0xa0  水银
+        ('rock', ctypes.c_uint32),          # 0xa4  石头
+        ('sulphur', ctypes.c_uint32),       # 0xa8  硫磺
+        ('crystal', ctypes.c_uint32),       # 0xac  水晶
+        ('gem', ctypes.c_uint32),           # 0xb0  宝石
+        ('gold', ctypes.c_uint32),          # 0xb4  黄金
+        ('_u5', ctypes.c_char * 0x14),      # 0xb8
+        ('name', ctypes.c_char * 21),       # 0xcc
         ('activeflag', ctypes.c_int8),      # 1 active 0 sleep
         ('playerflag', ctypes.c_int8),      # 1 player 0 computer
-        ('_u5', ctypes.c_char * 0x45),
+        ('_u6', ctypes.c_char * 0x45),
         ('resimp', ctypes.c_double * 8),
     ]
 
@@ -113,6 +122,7 @@ class Player(ctypes.Structure):
             'townscount': self.townscount,
             'curtown': self.curtown,
             'towns': list(self.towns),
+            # 'resources': [self.wood, self.mercury, self.rock, self.sulphur, self.crystal, self.gem, self.gold],
             'name': bytes2str(self.name, 'gbk'),
             'activeflag': self.activeflag,
             'playerflag': self.playerflag,
@@ -341,32 +351,41 @@ def get_all_resources(process):
     return data
 
 
-def get_game_base_addr(pid):
-    """获取游戏基址"""
-    info = memory.get_process_info(pid)
-    base_addr = info[2]
-    data = {}
-    for m in base_addr:
-        if m.endswith(b'.exe'):
-            data['HD'] = m.endswith(b'HD.exe')
-            data['exe'] = base_addr[m]
-        if m == b'smackw32.dll':
-            data['smackw32.dll'] = base_addr[m]
-    global EXE_ADDR
-    global SMACKW32_DLL_ADDR
+def init_game_base_addr(process, is_hd):
+    """初始化游戏基址"""
     global GAME_ADDR
     global POINTER
-    if 'exe' in data:
-        EXE_ADDR = data['exe']
-        if data['HD']:
-            GAME_ADDR = HD_GAME_ADDR
-            POINTER = HD_POINTER
-        else:
-            GAME_ADDR = NO_HD_GAME_ADDR
-            POINTER = NO_HD_POINTER
-    if 'smackw32.dll' in data:
-        SMACKW32_DLL_ADDR = data['smackw32.dll']
-    return data
+    global GAME_INITED
+
+    if is_hd:
+        GAME_ADDR = HD_GAME_ADDR
+        POINTER = HD_POINTER
+    else:
+        GAME_ADDR = NO_HD_GAME_ADDR
+        POINTER = NO_HD_POINTER
+
+    current_player_addr = memory.read_process(process, POINTER, 4)
+    print('current_player_addr :%x' % (current_player_addr))
+    if not current_player_addr:
+        # 游戏还未开始
+        GAME_INITED = False
+    else:
+        playeridx = memory.read_process(process, current_player_addr, 1)
+        print('playeridx:', playeridx)
+        if 0 <= playeridx <= 7:
+            GAME_INITED = True
+            GAME_ADDR['player1'] = current_player_addr - (0x0168 * playeridx)
+            play1_gold = GAME_ADDR['player1'] + 0xb4
+            GAME_ADDR['hero_1'] = GAME_ADDR['player1'] + 0x0b50
+            GAME_ADDR['town_1_base'] = GAME_ADDR['hero_1'] - 0x0c
+            i = 0
+            while i < 8:
+                GAME_ADDR['play%d_gold' % (i+1)] = play1_gold + (i * 0x0168)
+                i += 1
+        for k in GAME_ADDR:
+            print(k, hex(GAME_ADDR[k]))
+
+    return GAME_INITED
 
 
 def get_town_info(process, num):
@@ -442,28 +461,27 @@ def set_town_info(process, num, offset, value, size):
 
 
 def main():
-    pid = 0x588
+    pid = 0xe0
 
     process = memory.inject_process(pid)
     if not process:
         return
 
-    addrs = get_game_base_addr(pid)
-    for m in addrs:
-        print(m, hex(addrs[m]))
+    init_game_base_addr(process, True)
 
     # for hero in list_all_hero(process):
     #     print(hero['num'], hex(hero['addr']), hero['name'], hero['player'])
 
     # learn_all_magic(process, 0)
     # print(get_current_play(process))
-    info = get_town_info(process, 0)
-    print(info)
+    # info = get_town_info(process, 0)
+    # print(info)
     # players = list_all_player(process)
     # for player in players:
     #     print('playeridx:', player['playeridx'])
     #     print('curtown:', player['curtown'])
     #     print('towns:', player['towns'])
+    #     print('name:', player['name'])
 
     memory.close_process(process)
 

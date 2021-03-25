@@ -7,10 +7,18 @@ import platform
 import struct
 import log
 
-if platform.architecture()[0] == '32bit':
-    IS_32 = True
+if platform.machine().endswith('64'):
+    # 64位系统
+    IS_64 = True
 else:
-    IS_32 = False
+    # 32位系统
+    IS_64 = False
+if platform.architecture()[0] == '64bit':
+    # 64位python
+    IS_PY_64 = True
+else:
+    # 32位python
+    IS_PY_32 = False
 
 # https://msdn.microsoft.com/en-us/library/aa383751#DWORD_PTR
 if ctypes.sizeof(ctypes.c_void_p) == ctypes.sizeof(ctypes.c_ulonglong):
