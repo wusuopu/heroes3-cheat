@@ -70,6 +70,7 @@ def get_game_info():
         PID = None
         PROCESS = None
         IS_HD = None
+        h3.GAME_INITED = False
         return render_json({'error': '游戏未运行', 'error_no': 0}, 500)
 
     data = {

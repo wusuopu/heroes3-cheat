@@ -316,8 +316,10 @@ def get_hero_info(process, num):
         data['行囊%02d' % (obj_index+1)] = bytes2number(buf, 0x1d4 + (8 * obj_index), 4),
         data['行囊%02d属性' % (obj_index+1)] = bytes2number(buf, 0x1d4 + (8 * obj_index) + 4, 4),
         obj_index += 1
+    # 物品栏之后一个字节记录当前物品的数量
+    data['行囊数量'] = bytes2number(buf, 0x1d4 + (8 * obj_index), 1)
 
-    # file_name = 'hero_%d' % (time.time())
+    # file_name = 'hero_%d.txt' % (time.time())
     # print('file_name:', file_name)
     # with open(file_name, 'w') as fp:
     #     i = 0
@@ -364,6 +366,7 @@ def init_game_base_addr(process, is_hd):
         GAME_ADDR = NO_HD_GAME_ADDR
         POINTER = NO_HD_POINTER
 
+    print('current_player_addr0 :%x' % (POINTER))
     current_player_addr = memory.read_process(process, POINTER, 4)
     print('current_player_addr :%x' % (current_player_addr))
     if not current_player_addr:
@@ -440,7 +443,8 @@ def learn_all_magic(process, num):
     """学会所有魔法"""
     hero_addr = GAME_ADDR['hero_1'] + (0x0492 * num)
     memory.write_process(process, hero_addr + 0x1B5, 0, 4)      # 魔法书
-    memory.write_process(process, hero_addr + 0x430, b'\x01' * 70, 70)      # 70种魔法
+    # 70项魔法，前70个字节记录已学会的。后70个字节记录可以使用的。
+    memory.write_process(process, hero_addr + 0x430 - 70, b'\x01' * 140, 140)      # 70种魔法
 
 
 def set_resources(process, player, data):
@@ -461,7 +465,7 @@ def set_town_info(process, num, offset, value, size):
 
 
 def main():
-    pid = 0xe0
+    pid = 6284
 
     process = memory.inject_process(pid)
     if not process:
