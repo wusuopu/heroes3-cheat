@@ -1405,6 +1405,11 @@ class Main extends React.Component {
         hd: undefined,
         status: false,
       },
+      form: {
+        pid: undefined,
+        hd: true,
+        error: '',
+      },
       resources: [],
       heroes: [],
     }
@@ -1420,6 +1425,9 @@ class Main extends React.Component {
   }
 
   render () {
+    if (!this.state.game.pid) {
+      return this.renderGameDetect()
+    }
     return (
       <div>
         {this.renderGameInfo()}
@@ -1466,6 +1474,62 @@ class Main extends React.Component {
     return (
       <TownTab key={this.state.game.player} game={this.state.game} />
     )
+  }
+  renderGameDetect () {
+    return (
+      <div className="game_info">
+        <p className="error">Heroes3.exe 游戏未运行</p>
+        <p className="error">{ this.state.form.error }</p>
+        <p>游戏自动检测中......</p>
+        <p>若是无法自动检测到游戏，可以手动输入游戏的进程ID（可通过任务管理器查看）来加载游戏。</p>
+        <div>
+          <label>游戏进程：</label>
+          <input type="number" min="1" value={this.state.form.pid}  onChange={ev => {
+            let form = _.assign({}, this.state.form, {pid: ev.nativeEvent.target.value})
+            this.setState({form})
+          }}/>
+        </div>
+        <div>
+          <label>游戏版本：</label>
+          <span><input type="radio" id="hd" checked={this.state.form.hd}  onChange={ev => {
+            let form = _.assign({}, this.state.form, {hd: true})
+            this.setState({form})
+          }}/><label htmlFor="hd">HD版</label></span>
+          <span><input type="radio" id="no_hd" checked={!this.state.form.hd} onChange={ev => {
+            let form = _.assign({}, this.state.form, {hd: false})
+            this.setState({form})
+          }}/><label htmlFor="no_hd">普通版</label></span>
+        </div>
+        <div>
+          <button onClick={this.handleDetect}>手动检测</button>
+        </div>
+      </div>
+    )
+  }
+  handleDetect = () => {
+    if (!this.state.form.pid) {
+      return
+    }
+    let form = {
+      pid: Number(this.state.form.pid),
+      hd: this.state.form.hd,
+    }
+    axios.put('/api/v1/game_info', form).then((res) => {
+      let data = res.data
+      const player = _.find(data.players, {playerflag: 1})
+      data.player = _.get(player, 'playeridx')
+      this.setState({game: data, form: {pid: undefined, hd: true, error: ''}})
+    }).catch((error) => {
+      console.log('detect error:', error)
+      let form = _.assign({}, this.state.form, {error: '游戏进程ID无效'})
+      this.setState({game: {
+        player: undefined,
+        players: [],
+        pid: undefined,
+        hd: undefined,
+      }, form})
+    })
+    console.log('handleDetect:', this.state.form)
   }
   handleTabClick = (tab) => {
     this.setState({tab: tab})

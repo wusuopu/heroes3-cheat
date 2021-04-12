@@ -137,7 +137,7 @@ def get_process_info(pid):
         )
         if ret:
             base_addr[szModName.value] = hMods[i]
-            log.debug("process: %8d\t%x\t%s" % (pid, hMods[i], szModName.value))
+            #log.debug("process: %8d\t%x\t%s" % (pid, hMods[i], szModName.value))
             if i == 0:
                 exe_name = szModName.value
         i += 1

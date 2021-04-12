@@ -6,6 +6,7 @@ import os
 import time
 import bottle
 import h3
+import log
 import memory
 
 DEBUG = bool(os.environ.get('DEBUG'))
@@ -31,35 +32,42 @@ def callback(path):
     return bottle.static_file(path, root='./static')
 
 
-@bottle.get('/api/v1/game_info')
-def get_game_info():
+def init_game_info(pid, is_hd):
     global PID
     global PROCESS
     global IS_HD
 
-    if not PID:
-        processes = memory.list_process()
-        pid = None
-        for name in processes:
-            if name.startswith(b'Heroes3') and name.endswith(b'.exe'):
-                pid = processes[name]
-                IS_HD = name.endswith(b'HD.exe')
-                break
-        if pid:
-            PID = pid
-            PROCESS = memory.inject_process(PID)
-
-    if not PID:
+    if not pid:
         h3.GAME_INITED = False
         return render_json({'error': '游戏未运行', 'error_no': 0}, 500)
+
+    if pid != PID:
+        PID = pid
+        if PROCESS:
+            try:
+                memory.close_process(PROCESS)
+            except Exception:
+                pass
+            PROCESS = None
+    if not PROCESS:
+        h3.GAME_INITED = False
+        PROCESS = memory.inject_process(PID)
 
     if not PROCESS:
         PID = None
         h3.GAME_INITED = False
         return render_json({'error': '游戏未运行', 'error_no': 0}, 500)
 
+    IS_HD = is_hd
     if not h3.GAME_INITED:
-        h3.init_game_base_addr(PROCESS, IS_HD)
+        log.debug('init_game_base_addr: %d %s' % (PROCESS, IS_HD))
+        try:
+            h3.init_game_base_addr(PROCESS, IS_HD)
+        except Exception:
+            PID = None
+            PROCESS = None
+            IS_HD = None
+            return render_json({'error': '游戏未运行', 'error_no': 0}, 500)
 
     if not h3.GAME_INITED:
         return render_json({'status': False, 'pid': PID, 'hd': IS_HD, 'players': []}, 200)
@@ -81,6 +89,35 @@ def get_game_info():
     }
 
     return render_json(data)
+
+
+
+@bottle.get('/api/v1/game_info')
+def get_game_info():
+    global PID
+    global PROCESS
+    global IS_HD
+
+    if not PID:
+        processes = memory.list_process()
+        pid = None
+        for name in processes:
+            if name.startswith(b'Heroes3') and name.endswith(b'.exe'):
+                pid = processes[name]
+                IS_HD = name.endswith(b'HD.exe')
+                break
+        if pid:
+            PID = pid
+            PROCESS = memory.inject_process(PID)
+
+    return init_game_info(PID, IS_HD)
+
+
+@bottle.put('/api/v1/game_info')
+def put_game_info():
+    pid = bottle.request.json['pid']
+    hd = bottle.request.json['hd']
+    return init_game_info(pid, hd)
 
 
 # 获取/修改资源
@@ -149,4 +186,5 @@ def update_town(num):
 
 if __name__ == '__main__':
     print('start with debug:', DEBUG)
+    log.set_level(DEBUG)
     bottle.run(host='0.0.0.0', port='9090', debug=True, reloader=DEBUG)
