@@ -766,21 +766,23 @@ class HeroTab extends React.Component {
           <i className={`icon-skills icon-skills-${index}`}></i>
           <select value={info[field]} onChange={(ev) => {
             let value = Number(ev.nativeEvent.target.value)
-            let values = [value]
-            let fields = [field]
-            if (value !== 0 && info[field] === 0) {
-              // 学习技能
-              fields.push(positionFields[index])
-              fields.push('技能个数')
-              values.push(index + 1)
-              values.push(info['技能个数'] + 1)
-            } else if (value === 0 && info[field] !== 0) {
-              // 移除技能
-              fields.push(positionFields[index])
-              fields.push('技能个数')
-              values.push(0)
-              values.push(info['技能个数'] - 1)
-            }
+            let fields = []
+            let values = []
+            let count = 0
+            _.map(skillFields, (f, idx) => {
+              fields.push(f)
+              fields.push(positionFields[idx])
+              let v = idx === index ? value : info[f]
+              if (v) {
+                values.push(v)
+                values.push(++count)
+              } else {
+                values.push(0)
+                values.push(0)
+              }
+            })
+            fields.push('技能个数')
+            values.push(count)
             this.handleMultiProperyChange(fields, values)
           }}>
             <option value={0}>-</option>
