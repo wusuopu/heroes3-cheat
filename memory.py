@@ -97,6 +97,17 @@ def int_to_bytes(i, size=4, unsigned=True):
     return struct.pack(f, i)
 
 
+def array_to_list(value):
+    """将C Array 转为 python list"""
+    data = []
+    for v in (value):
+        if isinstance(v, ctypes.Array):
+            data.append(array_to_list(v))
+        else:
+            data.append(v)
+    return data
+
+
 def get_process_info(pid):
     # https://docs.microsoft.com/en-us/windows/desktop/psapi/enumerating-all-modules-for-a-process
     hProcess = ctypes.windll.kernel32.OpenProcess(

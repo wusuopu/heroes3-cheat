@@ -1283,33 +1283,62 @@ class TownTab extends React.Component {
     )
   }
   renderProperySection (info) {
-    const fields = ['artifact_builded', 'artifact_visible', 'today_builded']
     return (
       <div className="info-section">
-        <h2>基本属性 <button className="confirm" onClick={this.handleProperyModify(fields)}>确认修改</button></h2>
+        <h2>建造修改</h2>
         <ul className="info-list">
           <li className="info-item">
             <label>建造神器</label>
-            <input type="checkbox" checked={info['artifact']} onChange={(ev) => {
+            <input type="checkbox" checked={info.built.grail & info.built2.grail} onChange={(ev) => {
               let checked = ev.nativeEvent.target.checked
               let mask = checked ? 0x04 : 0xfb
-              let fields = ['artifact_visible', 'artifact_builded']
-              let values = _.map(fields, (f) => {
-                if (checked) { return info[f] | mask }
-                else { return info[f] & mask }
+              let data = _.map([info.built.origin_value[3], info.built2.origin_value[3]], (v, index) => {
+                let offset = 0x150 + 3 + index * 8
+                let size = 1
+                let value
+                if (checked) { value = v | mask }
+                else { value = v & mask }
+                return {offset, size, value}
               })
-              fields.push('artifact')
-              values.push(checked)
-              this.handleMultiProperyChange(fields, values)
+              this.handleChangeTown(data)
             }} />
           </li>
           <li className="info-item">
-            <label>今日已建造</label>
-            <input type="checkbox" checked={info['today_builded']} onChange={(ev) => {
-              let checked = ev.nativeEvent.target.checked
-              let value = Boolean(checked)
-              this.handleProperyChange('today_builded', value)
-            }} />
+            <button onClick={() => {
+              let data = []
+              _.map([info.built.origin_value, info.built2.origin_value], (v, index) => {
+                _.times(6, (n) => { // 仅前6个字节有用到
+                  let offset = 0x150 + n + index * 8
+                  let size = 1
+                  let value = info.buildableMask.origin_value[n]
+                  if (n == 3) {     // 保留神器配置
+                    value = value & (v[n] | 0xfb)   // 0b11111011
+                  }
+                  data.push({offset, size, value})
+                })
+              })
+              this.handleChangeTown(data)
+            }}>一键建造（仅建造可建造的建筑）</button>
+          </li>
+          <li className="info-item">
+            <button onClick={() => {
+              let data = []
+              _.map([info.built.origin_value, info.built2.origin_value], (v, index) => {
+                _.times(6, (n) => { // 仅前6个字节有用到
+                  let offset = 0x150 + n + index * 8
+                  let size = 1
+                  let value = 0xff
+                  if (n == 3) {     // 保留神器配置
+                    value = value & (v[n] | 0xfb)   // 0b11111011
+                  }
+                  if (n === 5) {
+                    value = 0x0f    // 最后只有半个字节有效
+                  }
+                  data.push({offset, size, value})
+                })
+              })
+              this.handleChangeTown(data)
+            }}>完全建造（可突破建造限制）</button>
           </li>
         </ul>
       </div>
@@ -1353,43 +1382,16 @@ class TownTab extends React.Component {
       })
     }
   }
-  handleProperyChange = (field, value) => {
-    value = Number(value)
-    let max = BYTES_MAX[TOWN_OFFSET_MAP[field][1]]
-    if (value > max) { value = max }
-    let townInfo = _.assign({}, this.state.townInfo, {[field]: value})
-    this.setState({townInfo})
-  }
-  handleMultiProperyChange = (fields, values) => {
-    let data = {}
-    _.each(fields, (field, index) => {
-      let value = Number(values[index])
-      let max = BYTES_MAX[TOWN_OFFSET_MAP[field][1]]
-      if (value > max) { value = max }
-      data[field] = value
-    })
-    let townInfo = _.assign({}, this.state.townInfo, data)
-    this.setState({townInfo})
-  }
-  handleProperyModify = (fields) => {
-    // 修改城镇属性
-    return () => {
-      const data = _.map(fields, (field) => {
-        return {
-          offset: TOWN_OFFSET_MAP[field][0],
-          size: TOWN_OFFSET_MAP[field][1],
-          value: this.state.townInfo[field],
-        }
+  handleChangeTown = (data) => {
+    // data: Array<{offset, size, value}>
+    let currentTown = this.state.currentTown
+    if (_.isEmpty(data)) { return }
+    if (currentTown >= 0) {
+      axios.put(`/api/v1/towns/${currentTown}`, {data}).then((res) => {
+        this.setState({townInfo: res.data})
+      }).catch(() => {
+        this.setState({townInfo: {}})
       })
-      let currentTown = this.state.currentTown
-      if (_.isEmpty(data)) { return }
-      if (currentTown >= 0) {
-        axios.put(`/api/v1/towns/${currentTown}`, {data}).then((res) => {
-          this.setState({townInfo: res.data})
-        }).catch(() => {
-          this.setState({townInfo: {}})
-        })
-      }
     }
   }
 }
@@ -1414,6 +1416,11 @@ class Main extends React.Component {
       },
       resources: [],
       heroes: [],
+      upgrade: {
+        currentVersion: 20211008,
+        newVersion: 0,
+        url: '',
+      },
     }
 
     this._timer = undefined
@@ -1421,6 +1428,7 @@ class Main extends React.Component {
   componentDidMount () {
     // 获取游戏信息
     this.health_check()
+    this.check_upgrade()
   }
   componentWillUnmount () {
     if (this._timer) { clearTimeout(this._timer) }
@@ -1443,9 +1451,9 @@ class Main extends React.Component {
     )
   }
   renderGameInfo () {
-    let version = ''
+    let gameVersion = ''
     if (_.isBoolean(this.state.game.hd)) {
-      version = this.state.game.hd ? 'HD版' : '普通版'
+      gameVersion = this.state.game.hd ? 'HD版' : '普通版'
     }
     return (
       <div className="game_info">
@@ -1453,8 +1461,12 @@ class Main extends React.Component {
         <p>
           <span>当前玩家色：{PLAYER_COLORS[this.state.game.player]}</span>
           <span>当前游戏进程： {this.state.game.pid}</span>
-          <span>当前游戏版本： {version}</span>
+          <span>当前游戏版本： {gameVersion}</span>
           <button onClick={() => window.location.reload()}>刷新页面</button>
+          <span>修改器版本：{this.state.upgrade.currentVersion}</span>
+          {this.state.upgrade.newVersion > this.state.upgrade.currentVersion ? (
+          <span><a href={this.state.upgrade.url} target="_blank">下载新版本</a></span>
+          ): ''}
         </p>
       </div>
     )
@@ -1552,6 +1564,17 @@ class Main extends React.Component {
       }})
     }).then(() => {
       this._timer = setTimeout(this.health_check, 6500)
+    })
+  }
+  check_upgrade = () => {
+    axios.get('https://api.github.com/repos/wusuopu/heroes3-cheat/releases/latest').then((res) => {
+      let data = res.data
+      let newVersion = Number(data.tag_name)
+      if (!newVersion) { newVersion = 0 }
+      if (newVersion > this.state.upgrade.currentVersion) {
+        let upgrade = _.assign({}, this.state.upgrade, {newVersion, url: data.zipball_url})
+        this.setState({upgrade})
+      }
     })
   }
 }

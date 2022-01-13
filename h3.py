@@ -130,24 +130,105 @@ class Player(ctypes.Structure):
         return data
 
 
+class BuildingsBitfield(ctypes.Structure):
+    # size 0x08 最后20bits没有用到
+    _fields_ = [
+        ('u0', ctypes.c_uint8, 1),
+        ('u1', ctypes.c_uint8, 1),
+        ('u2', ctypes.c_uint8, 1),
+        ('u3', ctypes.c_uint8, 1),
+        ('u4', ctypes.c_uint8, 1),
+        ('u5', ctypes.c_uint8, 1),
+        ('u6', ctypes.c_uint8, 1),
+        ('u7', ctypes.c_uint8, 1),
+        ('u8', ctypes.c_uint8, 1),
+        ('u9', ctypes.c_uint8, 1),
+        ('u10', ctypes.c_uint8, 1),
+        ('u11', ctypes.c_uint8, 1),
+        ('u12', ctypes.c_uint8, 1),
+        ('u13', ctypes.c_uint8, 1),
+        ('u14', ctypes.c_uint8, 1),
+        ('u15', ctypes.c_uint8, 1),
+        ('u16', ctypes.c_uint8, 1),
+        ('u17', ctypes.c_uint8, 1),
+        ('u18', ctypes.c_uint8, 1),
+        ('u19', ctypes.c_uint8, 1),
+        ('u20', ctypes.c_uint8, 1),
+        ('u21', ctypes.c_uint8, 1),
+        ('u22', ctypes.c_uint8, 1),
+        ('u23', ctypes.c_uint8, 1),
+        ('u24', ctypes.c_uint8, 1),
+        ('u25', ctypes.c_uint8, 1),
+        ('grail', ctypes.c_uint8, 1),       # 神器
+        ('u27', ctypes.c_uint8, 1),
+        ('u28', ctypes.c_uint8, 1),
+        ('u29', ctypes.c_uint8, 1),
+        ('u30', ctypes.c_uint8, 1),         # 生物1
+        ('u31', ctypes.c_uint8, 1),
+        ('u32', ctypes.c_uint8, 1),
+        ('u33', ctypes.c_uint8, 1),
+        ('u34', ctypes.c_uint8, 1),
+        ('u35', ctypes.c_uint8, 1),
+        ('u36', ctypes.c_uint8, 1),
+        ('u37', ctypes.c_uint8, 1),         # 升级生物1
+        ('u38', ctypes.c_uint8, 1),
+        ('u39', ctypes.c_uint8, 1),
+        ('u40', ctypes.c_uint8, 1),
+        ('u41', ctypes.c_uint8, 1),
+        ('u42', ctypes.c_uint8, 1),
+        ('u43', ctypes.c_uint8, 1),
+        ('_unused0', ctypes.c_uint8, 4),
+        ('_unused1', ctypes.c_uint16),
+    ]
+
+    def to_json(self):
+        data = { 'origin_value': self.origin_value() }
+        for field in self._fields_:
+            name = field[0]
+            value = getattr(self, name)
+            data[name] = value
+        return data
+
+    def origin_value(self):
+        size = ctypes.sizeof(self)
+        addr = ctypes.byref(self)
+        value = ctypes.string_at(addr, size)
+        return list(value)
+
 class Town(ctypes.Structure):
     # size 0x168
+    _pack_ = 1 # 1字节对齐
     _fields_ = [
         ('idx', ctypes.c_int8),             # 0x00 0~47
         ('player', ctypes.c_int8),          # 0x01 0~7
         ('today_builded', ctypes.c_int8),   # 0x02 今日已建造: 0, 1
-        ('_u1', ctypes.c_char * 1),
+        ('_u_03', ctypes.c_char * 1),
         ('type', ctypes.c_int8),            # 0x04 城镇类型：城堡, 壁垒, 楼塔, 地狱, 墓园, 地下城, 据点, 要塞, 元素城
         ('xAxis', ctypes.c_uint8),          # 0x05 坐标
         ('yAxis', ctypes.c_uint8),          # 0x06
         ('zAxis', ctypes.c_uint8),          # 0x07
-        ('_u2', ctypes.c_char * (0xc8 - 0x07 - 1)),
-        ('name_pointer', ctypes.c_uint32),  # 0xc8 城镇名字指针
-        ('_u3', ctypes.c_char * (0x0153 - 0xc8 - 4)),
-        ('artifact_visible', ctypes.c_uint8),       # 0x0153 显示神器   和0x04进行&操作后不为0
-        ('_u4', ctypes.c_char * (0x015b - 0x0153 - 1)),
-        ('artifact_builded', ctypes.c_uint8),       # 0x015b 建造神器
-        ('_u5', ctypes.c_char * (0x0168 - 0x015b - 1)),
+        ('_u_08', ctypes.c_char * 4),       # 0x08
+        ('garrisonHero', ctypes.c_uint32),  # 0x0C 驻扎英雄编号
+        ('visitingHero', ctypes.c_uint32),  # 0x10 来访英雄编号
+        ('mageLevel', ctypes.c_uint8),      # 0x14 当前魔法行会等级
+        ('_u_15', ctypes.c_char * 1),       # 0x15
+        ('recruits', ctypes.c_uint16 * 7 * 2),  # 0x16  可招的新兵数量，升级与不升级
+        ('_u_32', ctypes.c_char * 1),         # 0x32
+        ('manaVortexAvailable', ctypes.c_uint8),         # 0x33 该周神力涡流是否可用
+        ('mysticPondResourceCount', ctypes.c_uint32),    # 0x34 神秘资源数量
+        ('mysticPondResourceType', ctypes.c_uint32),     # 0x38 神秘资源类型
+        ('summoningPortalCreatureType', ctypes.c_uint32),       # 0x3C 召唤门生物 struct { INT32 type; INT32 amount; } size 0x06
+        ('summoningPortalCreatureAmount', ctypes.c_uint16),     # 0x40 召唤门生物 struct { INT32 type; INT16 amount; } size 0x06
+        ('_u_42', ctypes.c_char * 2),           # 0x42
+        ('spells', ctypes.c_uint32 * 6 * 5),    # 0x44 每层魔法行会的魔法
+        ('magicGuild', ctypes.c_uint8 * 5),     # 0xbc 每层魔法行会是否已建造 值依次： 05 04 03 02 01
+        ('_u_c1', ctypes.c_char * 7),           # 0xc1
+        ('name_pointer', ctypes.c_uint32),      # 0xc8 城镇名字指针 size 0x0C
+        ('nameLen', ctypes.c_uint16),           # 0xcc 名字字节数
+        ('_u_ce', ctypes.c_char * (0x0150 - 0xce)), # 0xce
+        ('built', BuildingsBitfield),           # 0x0150 显示32个建筑是否已建造 size 0x08
+        ('built2', BuildingsBitfield),          # 0x0158 实际32个建筑是否已建造 size 0x08
+        ('buildableMask', BuildingsBitfield),   # 0x0160 32个建筑是否可建造 size 0x08
     ]
 
     def to_json(self):
@@ -159,9 +240,22 @@ class Town(ctypes.Structure):
             'xAxis': self.xAxis,
             'yAxis': self.yAxis,
             'zAxis': self.zAxis,
+            'garrisonHero': self.garrisonHero,
+            'visitingHero': self.visitingHero,
+            'mageLevel': self.mageLevel,
+            'recruits': memory.array_to_list(self.recruits),
+            'manaVortexAvailable': self.manaVortexAvailable,
+            'mysticPondResourceCount': self.mysticPondResourceCount,
+            'mysticPondResourceType': self.mysticPondResourceType,
+            'summoningPortalCreatureType': self.summoningPortalCreatureType,
+            'summoningPortalCreatureAmount': self.summoningPortalCreatureAmount,
+            'spells': memory.array_to_list(self.spells),
+            'magicGuild': memory.array_to_list(self.magicGuild),
             'name_pointer': self.name_pointer,
-            'artifact_visible': self.artifact_visible,
-            'artifact_builded': self.artifact_builded,
+            'nameLen': self.nameLen,
+            'built': self.built.to_json(),
+            'built2': self.built2.to_json(),
+            'buildableMask': self.buildableMask.to_json(),
         }
         return data
 
@@ -403,9 +497,7 @@ def get_town_info(process, num):
     if town.name_pointer == 0 or town.name_pointer == 0xFFFFFFFF:
         data['name'] = ''
     else:
-        data['name'] = bytes2str(memory.read_process(process, town.name_pointer, 20), 'gbk')
-    data['artifact'] = (data['artifact_visible'] & 0x04) and (data['artifact_builded'] & 0x04)
-
+        data['name'] = bytes2str(memory.read_process(process, town.name_pointer, town.nameLen), 'gbk')
     # file_name = 'town-%d' % (num)
     # print('town_name:', file_name)
     # with open(file_name, 'w') as fp:
@@ -465,7 +557,7 @@ def set_town_info(process, num, offset, value, size):
 
 
 def main():
-    pid = 6284
+    pid = 1468
 
     process = memory.inject_process(pid)
     if not process:
