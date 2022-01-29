@@ -497,7 +497,7 @@ def get_town_info(process, num):
     if town.name_pointer == 0 or town.name_pointer == 0xFFFFFFFF:
         data['name'] = ''
     else:
-        data['name'] = bytes2str(memory.read_process(process, town.name_pointer, town.nameLen), 'gbk')
+        data['name'] = bytes2str(memory.read_process(process, town.name_pointer, 20), 'gbk')
     # file_name = 'town-%d' % (num)
     # print('town_name:', file_name)
     # with open(file_name, 'w') as fp:
