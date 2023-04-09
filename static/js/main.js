@@ -1463,7 +1463,7 @@ class Main extends React.Component {
       resources: [],
       heroes: [],
       upgrade: {
-        currentVersion: 20220113,
+        currentVersion: 20230409,
         newVersion: 0,
         url: '',
       },
