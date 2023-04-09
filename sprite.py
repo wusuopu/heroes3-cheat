@@ -22,7 +22,7 @@ def convert_image_to_base64():
         files.sort()
         for f in files:
             name, ext = os.path.splitext(f)
-            if ext not in ['.gif', '.jpg', '.jpeg', '.bmp']:
+            if ext not in ['.gif', '.jpg', '.jpeg', '.bmp', '.png']:
                 # 图片文件
                 continue
             print(image_category, f)

@@ -108,6 +108,11 @@ ul.header .tab.active {
   width: 14% !important;
 }
 
+.speciality-item {
+  cursor: pointer;
+  width: 25%;
+}
+
 .object-list {
   display: flex;
   flex-wrap: wrap;
@@ -207,4 +212,8 @@ ul.header .tab.active {
 .icon-players {
   width: 36px;
   height: 43px;
+}
+.icon-specialities {
+  width: 182px;
+  height: 60px;
 }

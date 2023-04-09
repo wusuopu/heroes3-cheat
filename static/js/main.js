@@ -386,6 +386,8 @@ const HERO_OFFSET_MAP = {
 
   '有魔法书': [0x1B5, 4],
   '士气幸运': [0x107, 1],       // 0b11000000 0xC0 高士气，高幸运
+
+  '特长': [0x1A, 4],
 }
 // 城镇各项值的偏移地址，战胜的字节数
 const TOWN_OFFSET_MAP = {
@@ -638,6 +640,7 @@ class HeroTab extends React.Component {
       heroes: [],
       currentHero: undefined,
       heroInfo: {},
+      specialityModalVisible: false,
       objModalVisible: false,
       objIndex: undefined,
       creatureModalVisible: false,
@@ -714,10 +717,12 @@ class HeroTab extends React.Component {
     return (
       <div className="hero-info">
         {this.renderProperySection(info)}
+        {this.renderSpecialitySection(info)}
         {this.renderSkillSection(info)}
         {this.renderObjectSection(info)}
         {this.renderCreatureSection(info)}
 
+        {this.renderSpecialityModal()}
         {this.renderObjectModal()}
         {this.renderCreatureModal()}
       </div>
@@ -750,6 +755,47 @@ class HeroTab extends React.Component {
           </li>
         </ul>
       </div>
+    )
+  }
+  renderSpecialitySection (info) {
+    const fields = ['特长']
+    const value = info['特长']
+    const index = _.padStart(value.toString(16), 4, '0')
+    return (
+      <div className="info-section">
+        <h2>英雄特长 <button className="confirm" onClick={this.handleProperyModify(fields)}>确认修改</button></h2>
+        <ul className="info-list">
+          <li className="speciality-item">
+            <i className={`icon icon-specialities icon-specialities-${index}`} onClick={() => {
+              this.setState({specialityModalVisible: true})
+            }}></i>
+          </li>
+        </ul>
+      </div>
+    )
+  }
+  renderSpecialityModal () {
+    const eles = []
+    const maxSpecialityValue = 0x9b
+    _.times(maxSpecialityValue, (value) => {
+      const index = _.padStart(value.toString(16), 4, '0')
+      eles.push(
+        <li key={index} onClick={() => {
+          this.handleMultiProperyChange(['特长'], [value])
+          this.setState({specialityModalVisible: false})
+        }} className="speciality-item">
+          <i className={`icon icon-specialities icon-specialities-${index}`}></i>
+        </li>
+      )
+    })
+    return (
+      <Modal visible={this.state.specialityModalVisible} onClose={() => {
+        this.setState({objIndex: undefined, specialityModalVisible: false})
+      }}>
+        <ul className="object-list">
+          {eles}
+        </ul>
+      </Modal>
     )
   }
   renderSkillSection (info) {
