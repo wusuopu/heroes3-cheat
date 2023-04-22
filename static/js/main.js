@@ -763,7 +763,16 @@ class HeroTab extends React.Component {
     const index = _.padStart(value.toString(16), 4, '0')
     return (
       <div className="info-section">
-        <h2>英雄特长 <button className="confirm" onClick={this.handleProperyModify(fields)}>确认修改</button></h2>
+        <h2>
+          英雄特长
+          <button className="confirm" onClick={this.handleProperyModify(fields)}>确认修改</button>
+          <button className="confirm" onClick={() => {
+            // 撤消英雄特长的修改
+            this.handleMultiProperyChange(['特长'], [info.num])
+            setTimeout(() => {
+              this.handleProperyModify(fields)()
+            }, 0)
+          }}>重置</button></h2>
         <ul className="info-list">
           <li className="speciality-item">
             <i className={`icon icon-specialities icon-specialities-${index}`} onClick={() => {
@@ -776,7 +785,7 @@ class HeroTab extends React.Component {
   }
   renderSpecialityModal () {
     const eles = []
-    const maxSpecialityValue = 0x9b
+    const maxSpecialityValue = 0x9c
     _.times(maxSpecialityValue, (value) => {
       const index = _.padStart(value.toString(16), 4, '0')
       eles.push(
@@ -1463,7 +1472,7 @@ class Main extends React.Component {
       resources: [],
       heroes: [],
       upgrade: {
-        currentVersion: 20230409,
+        currentVersion: window.CURRENT_VERSION,
         newVersion: 0,
         url: '',
       },

@@ -16,6 +16,8 @@ PID = None          # 当前游戏进程ID
 PROCESS = None      # 当前游戏进程句柄
 IS_HD = None
 
+VERSION = '20230409'
+
 
 def render_json(data, status=200):
     bottle.response.status = status
@@ -24,8 +26,8 @@ def render_json(data, status=200):
 
 @bottle.route('/')
 def index():
-    roundKey = time.time() if DEBUG else ''
-    return bottle.template('index', **{'DEBUG': DEBUG, 'roundKey': roundKey})
+    roundKey = time.time() if DEBUG else VERSION
+    return bottle.template('index', **{'DEBUG': DEBUG, 'roundKey': roundKey, 'VERSION': VERSION})
 
 @bottle.route('/static/<path:path>')
 def callback(path):
