@@ -11,7 +11,7 @@
 2. 英雄的基本属性、兵种数量、各项技能、携带物品等的修改；
 
 
-目前经过测试可支持《死亡阴影》的普通版本和HD版本的修改。游戏下载地址： https://pan.baidu.com/s/1z59TD_T1faujrbyLL-kiDQ 
+目前经过测试可支持《死亡阴影》的普通版本和HD版本的修改。游戏下载地址： https://pan.baidu.com/s/1z59TD_T1faujrbyLL-kiDQ?pwd=i12s 
 
 ![](screenshots/image00.jpg)
 ![](screenshots/image01.jpg)
