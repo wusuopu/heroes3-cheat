@@ -64,6 +64,7 @@ py   = sys.version_info
 py3k = py >= (3, 0, 0)
 py25 = py <  (2, 6, 0)
 py31 = (3, 1, 0) <= py < (3, 2, 0)
+py33gt = py > (3, 3, 0)
 
 # Workaround for the missing "as" keyword in py3k.
 def _e(): return sys.exc_info()[1]
@@ -84,7 +85,10 @@ if py3k:
     from urllib.parse import urlencode, quote as urlquote, unquote as urlunquote
     urlunquote = functools.partial(urlunquote, encoding='latin1')
     from http.cookies import SimpleCookie
-    from collections import MutableMapping as DictMixin
+    if py33gt:
+        from collections.abc import MutableMapping as DictMixin
+    else:
+        from collections import MutableMapping as DictMixin
     import pickle
     from io import BytesIO
     from configparser import ConfigParser

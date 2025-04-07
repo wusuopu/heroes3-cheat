@@ -389,7 +389,7 @@ const HERO_OFFSET_MAP = {
 
   '特长': [0x1A, 4],
 }
-// 城镇各项值的偏移地址，战胜的字节数
+// 城镇各项值的偏移地址，占用的字节数
 const TOWN_OFFSET_MAP = {
   'today_builded': [0x02, 1],
   'artifact': [-1, 1],      // 虚拟值
