@@ -1,7 +1,7 @@
 # 英雄修改3修改器
 
 ## 使用方法
-1. 首先安装 python3 运行环境( https://python.org/ )(经过测试 python3.4，windows xp/10 可以使用。)
+1. 首先安装 python3 运行环境( https://python.org/ )(经过测试 python3.4/python3.10，windows xp/10 可以使用。)
 2. 执行命令 python app.py 启动修改器
 3. 使用浏览器打开页面 http://127.0.0.1:9090 访问修改器界面
 
