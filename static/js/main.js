@@ -1522,6 +1522,7 @@ class Main extends React.Component {
           {this.state.upgrade.newVersion > this.state.upgrade.currentVersion ? (
           <span><a href={this.state.upgrade.url} target="_blank">下载新版本</a></span>
           ): ''}
+          <button onClick={() => document.documentElement.classList.toggle("dark-mode")}>深色模式切换</button>
         </p>
       </div>
     )

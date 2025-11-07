@@ -2160,3 +2160,14 @@ ul.header .tab.active {
   width: 182px;
   height: 60px;
 }
+
+/* ========= 深色模式 ========= */
+.dark-mode {
+  background: #111111;
+}
+.dark-mode .modal-body {
+  background: #111111;
+}
+.dark-mode main {
+  color: white;
+}

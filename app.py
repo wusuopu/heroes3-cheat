@@ -1,6 +1,10 @@
 #!/usr/bin/env python
 # encoding: utf-8
 
+import sys
+if "." not in sys.path:
+    sys.path.append(".")
+
 import json
 import os
 import time
@@ -16,7 +20,7 @@ PID = None          # 当前游戏进程ID
 PROCESS = None      # 当前游戏进程句柄
 IS_HD = None
 
-VERSION = '20240407'
+VERSION = '20251107'
 
 
 def render_json(data, status=200):
